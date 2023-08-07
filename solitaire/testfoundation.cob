@@ -4,9 +4,44 @@
        DATA DIVISION. 
 
        WORKING-STORAGE SECTION.
+      
+      ******************************************************************
+      * CARD DEFINITIONS
+      *   DEFINES A CARD FOR THE GAME
+       01 CARD.
+          02 C-RANK.
+             03 RANK-A             PIC X.
+             03 RANK-N             PIC 99.
+          02 C-SUIT.
+             03 SUIT-A             PIC X.
+             03 SUIT-C             PIC X.
+             03 SUIT-N             PIC 9.
+
       ******************************************************************
       *   THE GAME OVERALL.
        01 GAME.
+      *      DEFINES ALL POSSIBLE CARDS IN THE GAME
+          02 CARDS.
+      *         TABLE OF CARDS IN THE GAME
+             04 CARDS-SUIT-T OCCURS 4 TIMES INDEXED BY CARDS-S-I.
+                05 CARDS-RANK-T OCCURS 13 TIMES INDEXED BY CARDS-R-I.
+                   06 CARD-RANK.
+      *                  ALPHA CODE OF RANK:
+      *                  A,2,3,4,5,6,7,8,9,T,J,Q,K             
+                      07 RANK-A    PIC X.
+      *                  NUMBER CODE OF RANK:
+      *                  1 - 13
+                      07 RANK-N    PIC 99.
+                   06 CARD-SUIT.
+      *                  ALPHA CODE OF SUIT:
+      *                  D(IAMONDS),C(LUB),H(EARTS),S(PADES)
+                      07 SUIT-A    PIC X.
+      *                  COLOR OF SUIT:
+      *                  R(ED), B(LACK)
+                      07 SUIT-C    PIC X.
+      *                  NUMBER CODE OF SUIT:
+      *                  1 - 4
+                      07 SUIT-N    PIC 9.
       *      DEFINES ALL FOUNDATION STACKS OF THE GAME
           02 FOUNDATION.
       *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
@@ -20,23 +55,32 @@
       *          NUMBER SUIT-TO-PUSH.
              05 F-STACKS-T OCCURS 4 TIMES INDEXED BY F-STACK-I.
       *         HOW MANY CARDS ARE IN THE STACK.
-                10 COUNT-OF-CARDS  PIC 99 VALUE 0.
+                10 COUNT-OF-CARDS  PIC 99  VALUE 0.
       *         NEXT ACCEPTABLE RANK
       *         ALWAYS COUNT-OF-CARDS + 1
-                10 NEXT-RANK       PIC 99 VALUE 1.
+                10 NEXT-RANK       PIC 99  VALUE 1.
       *         SIGNAL, IF THE STACK IS FULL
-                10 IS-FULL         PIC X  VALUE 'N'.
+                10 IS-FULL         PIC X.
+      *           ALPHA CODE OF RANK OF TOP CARD:
+      *           A,2,3,4,5,6,7,8,9,T,J,Q,K             
+                10 RANK-A          PIC X.
+      *           ALPHA CODE OF SUIT OF TOP CARD:
+      *           D(IAMONDS),C(LUB),H(EARTS),S(PADES)
+                10 SUIT-A          PIC X.
 
       ******************************************************************
       * VARIABLES FOR THE TEST RUN
-       01 TESTS-RUN                PIC 99 VALUE 0.
-       01 TESTS-OK                 PIC 99 VALUE 0.
-       01 TESTS-NOK                PIC 99 VALUE 0.
-       01 TESTS-RANK               PIC 99 VALUE 1.
+       01 T-RANK-A                 PIC X.
+       01 T-SUIT-A                 PIC X.
+       01 TESTS-RUN                PIC 999 VALUE 0.
+       01 TESTS-OK                 PIC 999 VALUE 0.
+       01 TESTS-NOK                PIC 999 VALUE 0.
+       01 TESTS-RANK               PIC 999 VALUE 1.
 
       ******************************************************************
        PROCEDURE DIVISION.
-           
+           DISPLAY "TESTFOUNDATION"           
+
            PERFORM 01-TEST-RESET.
 
            PERFORM VARYING SUIT-TO-PUSH
@@ -51,15 +95,11 @@
                    PERFORM 03-TEST-SUIT-PUSH-1-TO-MANY
            END-PERFORM
 
-           DISPLAY "TESTS RUN: " TESTS-RUN
-           DISPLAY "SUCCESSFUL / FAILED: " TESTS-NOK " / " TESTS-OK
-           STOP RUN.
+           PERFORM 10-TEST-PICS-OF-TOP-CARD.
 
-      ******************************************************************
-       01-FOUNDATION-RESET.
-           MOVE 1 TO OP-CODE.
-           CALL 'FOUNDATION' USING GAME
-           END-CALL.
+           DISPLAY "TESTS RUN: " TESTS-RUN
+           DISPLAY "SUCCESSFUL / FAILED: " TESTS-OK " / " TESTS-NOK
+           STOP RUN.
 
       ******************************************************************
        01-TEST-RESET.
@@ -100,6 +140,22 @@
                       ADD 1 TO TESTS-NOK
                       DISPLAY IS-FULL OF F-STACKS-T(F-STACK-I)
                    END-IF
+
+                   ADD 1 TO TESTS-RUN
+                   IF RANK-A OF F-STACKS-T(F-STACK-I) IS EQUAL TO 'X'
+                      ADD 1 TO TESTS-OK
+                   ELSE
+                      ADD 1 TO TESTS-NOK
+                      DISPLAY RANK-A OF F-STACKS-T(F-STACK-I)
+                   END-IF
+
+                   ADD 1 TO TESTS-RUN
+                   IF SUIT-A OF F-STACKS-T(F-STACK-I) IS EQUAL TO 'X'
+                      ADD 1 TO TESTS-OK
+                   ELSE
+                      ADD 1 TO TESTS-NOK
+                      DISPLAY SUIT-A OF F-STACKS-T(F-STACK-I)
+                   END-IF
            END-PERFORM.
 
       ******************************************************************
@@ -114,6 +170,16 @@
                    MOVE 2 TO OP-CODE
                    CALL 'FOUNDATION' USING GAME
                    END-CALL
+
+                   ADD 1 TO TESTS-RUN
+                   IF ERR-CODE IS EQUAL TO 0
+                      ADD 1 TO TESTS-OK
+                   ELSE
+                      ADD 1 TO TESTS-NOK
+                      DISPLAY "FAILED: 02-TEST-SUIT-PUSH-ALL-OK"
+                         WITH NO ADVANCING
+                      DISPLAY ": ERR-CODE <> 0"
+                   END-IF
 
                    ADD 1 TO TESTS-RUN
                    IF COUNT-OF-CARDS OF F-STACKS-T(F-STACK-I)
@@ -152,6 +218,7 @@
               DISPLAY "A " IS-FULL OF F-STACKS-T(F-STACK-I)
            END-IF.
 
+      ******************************************************************
        03-TEST-SUIT-PUSH-1-TO-MANY.
            PERFORM 01-FOUNDATION-RESET.
 
@@ -174,3 +241,79 @@
               ADD 1 TO TESTS-NOK
               DISPLAY "ERR-CODE=" ERR-CODE
            END-IF.
+
+      ******************************************************************
+       10-TEST-PICS-OF-TOP-CARD.
+           PERFORM 01-FOUNDATION-RESET.
+
+           PERFORM VARYING F-STACK-I
+              FROM 1 BY 1
+              UNTIL F-STACK-I > 4
+                   MOVE F-STACK-I TO SUIT-TO-PUSH
+                   PERFORM VARYING TESTS-RANK
+                      FROM 1 BY 1
+                      UNTIL TESTS-RANK > 13
+                           MOVE 2 TO OP-CODE
+                           CALL 'FOUNDATION' USING GAME
+                           END-CALL
+
+                           ADD 1 TO TESTS-RUN
+                           IF ERR-CODE IS EQUAL TO 0
+                              ADD 1 TO TESTS-OK
+                           ELSE
+                              ADD 1 TO TESTS-NOK
+                              DISPLAY
+                                 "FAILED: 10-TEST-PICS-OF-TOP-CARD:"
+                                 WITH NO ADVANCING 
+                              DISPLAY " ERR-CODE <> 0"
+                           END-IF
+
+      *                    FETCH CARD FROM CARDS FOR SUIT/RANK
+                           MOVE CARDS-RANK-T(F-STACK-I, TESTS-RANK)
+                              TO CARD
+      *                    COMPARE NOW THE DATA OF THE CARD TO THE
+      *                    FOUNDATION STACK
+      *                    CHECK RANK
+                           MOVE RANK-A OF F-STACKS-T(F-STACK-I) TO
+                              T-RANK-A
+                           ADD 1 TO TESTS-RUN
+                           IF RANK-A OF C-RANK IS EQUAL TO T-RANK-A
+                              ADD 1 TO TESTS-OK
+                           ELSE
+                              ADD 1 TO TESTS-NOK
+                              DISPLAY
+                                 "FAILED: 10-TEST-PICS-OF-TOP-CARD:"
+                                 WITH NO ADVANCING 
+                              DISPLAY "RANK-A " RANK-A OF C-RANK
+                                 WITH NO ADVANCING 
+                              DISPLAY " <> " T-RANK-A
+                           END-IF
+
+      *                    CHECK RANK
+                           MOVE SUIT-A OF F-STACKS-T(F-STACK-I) TO
+                              T-SUIT-A
+                           IF SUIT-A OF C-SUIT IS EQUAL TO T-SUIT-A
+                              ADD 1 TO TESTS-OK
+                           ELSE
+                              ADD 1 TO TESTS-NOK
+                              DISPLAY
+                                 "FAILED: 10-TEST-PICS-OF-TOP-CARD:"
+                                 WITH NO ADVANCING 
+                              DISPLAY "SUIT-A " SUIT-A OF C-SUIT
+                                 WITH NO ADVANCING 
+                              DISPLAY " <> " T-SUIT-A
+                           END-IF
+                           
+                   END-PERFORM
+           END-PERFORM.
+
+      ******************************************************************
+      * HERE ARE ALL SUPPORT PROCEDURES                                *
+      ******************************************************************
+       01-FOUNDATION-RESET.
+           CALL 'CARDS' USING GAME
+           END-CALL.
+
+           MOVE 1 TO OP-CODE.
+           CALL 'FOUNDATION' USING GAME
+           END-CALL.

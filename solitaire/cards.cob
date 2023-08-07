@@ -11,9 +11,9 @@
       *      TABLE OF RANKS IN THE GAME
           02 RANK-T OCCURS 13 TIMES INDEXED BY RANK-I.
       *         THE ALPHA LETTER OF THE RANK
-             03 RANK-A           PIC X.
+             03 RANK-A             PIC X.
       *         THE NUMBER OF THE RANK
-             03 RANK-N           PIC 99.                     
+             03 RANK-N             PIC 99.                     
 
       ******************************************************************
       *   DEFINES ALL POSSIBLE SUITS FOR A CARD IN THE GAME
@@ -21,23 +21,23 @@
       *      TABLE OF SUITS IN THE GAME
           02 SUIT-T OCCURS 4 TIMES INDEXED BY SUIT-I.
       *         THE ALPHA LETTER OF THE SUIT
-             03 SUIT-A           PIC X.
+             03 SUIT-A             PIC X.
       *         THE COLOR OF THE SUIT
-             03 SUIT-C           PIC X.                     
+             03 SUIT-C             PIC X.                     
       *         THE NUMBER OF THE SUIT
-             03 SUIT-N           PIC 9.
+             03 SUIT-N             PIC 9.
 
       ******************************************************************
       * CARD DEFINITIONS
       *   DEFINES A CARD FOR THE GAME
        01 CARD.
           02 C-RANK.
-             03 RANK-A           PIC X.
-             03 RANK-N           PIC 99.
+             03 RANK-A             PIC X.
+             03 RANK-N             PIC 99.
           02 C-SUIT.
-             03 SUIT-A           PIC X.
-             03 SUIT-C           PIC X.
-             03 SUIT-N           PIC 9.
+             03 SUIT-A             PIC X.
+             03 SUIT-C             PIC X.
+             03 SUIT-N             PIC 9.
 
        LINKAGE SECTION. 
       ******************************************************************
@@ -51,20 +51,58 @@
                    06 CARD-RANK.
       *                  ALPHA CODE OF RANK:
       *                  A,2,3,4,5,6,7,8,9,T,J,Q,K             
-                      07 RANK-A  PIC X.
+                      07 RANK-A    PIC X.
       *                  NUMBER CODE OF RANK:
       *                  1 - 13
-                      07 RANK-N  PIC 99.
+                      07 RANK-N    PIC 99.
                    06 CARD-SUIT.
       *                  ALPHA CODE OF SUIT:
       *                  D(IAMONDS),C(LUB),H(EARTS),S(PADES)
-                      07 SUIT-A  PIC X.
+                      07 SUIT-A    PIC X.
       *                  COLOR OF SUIT:
       *                  R(ED), B(LACK)
-                      07 SUIT-C  PIC X.
+                      07 SUIT-C    PIC X.
       *                  NUMBER CODE OF SUIT:
       *                  1 - 4
-                      07 SUIT-N  PIC 9.
+                      07 SUIT-N    PIC 9.
+      *      DEFINES ALL FOUNDATION STACKS OF THE GAME
+          02 FOUNDATION.
+      *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
+             05 OP-CODE            PIC 9.
+      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
+             05 ERR-CODE           PIC 9.
+      *      THE SUIT OF THE CARD TO PUSH ONTO THE FOUNDATION
+      *          INTO THE STACK WITH NUMBER SUIT-TO-PUSH.
+             05 SUIT-TO-PUSH       PIC 9.
+      *      THE RANK TO PUSH ONTO THE FOUNDATION INTO THE STACK WITH
+      *          NUMBER SUIT-TO-PUSH.
+             05 F-STACKS-T OCCURS 4 TIMES INDEXED BY F-STACK-I.
+      *         HOW MANY CARDS ARE IN THE STACK.
+                10 COUNT-OF-CARDS  PIC 99 VALUE 0.
+      *         NEXT ACCEPTABLE RANK
+      *         ALWAYS COUNT-OF-CARDS + 1
+                10 NEXT-RANK       PIC 99 VALUE 1.
+      *         SIGNAL, IF THE STACK IS FULL
+                10 IS-FULL         PIC X  VALUE 'N'.
+      *           ALPHA CODE OF RANK OF TOP CARD:
+      *           A,2,3,4,5,6,7,8,9,T,J,Q,K             
+                10 RANK-A          PIC X  VALUE 'X'.
+      *           ALPHA CODE OF SUIT OF TOP CARD:
+      *           D(IAMONDS),C(LUB),H(EARTS),S(PADES)
+                10 SUIT-A          PIC X  VALUE 'X'.
+      *   DEFINES THE STOCK OF THE GAME
+          02 STOCK.
+      *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
+             03 OP-CODE            PIC 9.
+      *      HOW MANY CARDS ARE IN THE STOCK.
+      *      IN THE INITIALIZATION PHASE, THIS COUNTER GOES UP,
+      *        AS IT COUNTS THE CARDS TRANFERRED INTO THE STOCK
+      *      THE STOCK SHRINKS OVER TIME, WHEN WE FETCH CARDS
+             03 COUNT-OF-CARDS     PIC 99.
+      *      TABLE OF CARDS IN THE STOCK
+             03 STOCK-T OCCURS 52 TIMES INDEXED BY STOCK-I.
+                06 RANK-N          PIC 99.
+                06 SUIT-N          PIC 9.
 
       ******************************************************************
        PROCEDURE DIVISION USING GAME.
