@@ -87,6 +87,14 @@
              05 CARD-IN-SCOPE.
                 26 RANK-N          PIC 99.
                 26 SUIT-N          PIC 9.
+      *         DATA WE NEED FOR MOVING CARDS IN THE TABLEAU
+      *         SOURCE STACK INDEX
+             05 MV-SRC-ST-I        PIC 9.
+      *         SOURCE CARD INDEX IN THE SOURCE STACK INDEX
+             05 MV-SRC-CA-I        PIC 99.
+      *         DESTINATION STACK INDEX
+             05 MV-DST-ST-I        PIC 9.
+      *         HOW MANY CARDS ARE IN THE TABLEAU.
              05 T-COUNT-OF-CARDS   PIC 99.
              05 T-STACKS-T OCCURS 7 TIMES INDEXED BY T-STACK-I.
       *            HOW MANY CARDS ARE IN THE STACK.
@@ -144,6 +152,30 @@
       
            PERFORM 01-RESET.
            PERFORM 13-MANDATORY-NONEMPTY-NOT-TOS.
+
+           PERFORM 01-RESET.
+           PERFORM 20-MV-SRC-IS-EMPTY.
+
+           PERFORM 01-RESET.
+           PERFORM 21-MV-SRC-OUT-OF-RANGE.
+
+           PERFORM 01-RESET.
+           PERFORM 22-MV-SRC-WRONG-RANK.
+
+           PERFORM 01-RESET.
+           PERFORM 23-MV-SRC-WRONG-SUIT.
+
+           PERFORM 01-RESET.
+           PERFORM 24-MV-SRC-NOT-KING.
+
+           PERFORM 01-RESET.
+           PERFORM 25-MV-SRC-KING-DST-NOT-EMPTY.
+
+           PERFORM 01-RESET.
+           PERFORM 26-MV-OK-SRC-NOT-KING.
+
+           PERFORM 01-RESET.
+           PERFORM 27-MV-OK-SRC-KING.
 
            DISPLAY "TESTS RUN: " TESTS-RUN
            DISPLAY "SUCCESSFUL / FAILED: " TESTS-OK " / " TESTS-NOK
@@ -1156,3 +1188,381 @@
                  WITH NO ADVANCING 
               DISPLAY " <> 2"
            END-IF.
+
+      ******************************************************************
+       20-MV-SRC-IS-EMPTY.
+           MOVE 1 TO MV-SRC-ST-I.
+           MOVE 6 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 1
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "20-MV-SRC-IS-EMPTY:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 1"
+           END-IF.
+
+      ******************************************************************
+       21-MV-SRC-OUT-OF-RANGE.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE 1 TO MV-SRC-ST-I.
+           MOVE 2 TO MV-SRC-CA-I.
+           MOVE 6 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 2
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "21-MV-SRC-OUT-OF-RANGE:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 2"
+           END-IF.
+
+      ******************************************************************       
+       22-MV-SRC-WRONG-RANK.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 5) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 5) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(3, 7) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 7) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 2 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE 1 TO MV-SRC-ST-I.
+           MOVE 1 TO MV-SRC-CA-I.
+           MOVE 2 TO MV-DST-ST-I.
+           MOVE 6 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 3
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "22-MV-SRC-WRONG-RANK:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 3"
+           END-IF.
+
+      ******************************************************************
+       23-MV-SRC-WRONG-SUIT.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 5) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 5) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(4, 6) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(4, 6) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 2 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE 1 TO MV-SRC-ST-I.
+           MOVE 1 TO MV-SRC-CA-I.
+           MOVE 2 TO MV-DST-ST-I.
+           MOVE 6 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 4
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "23-MV-SRC-WRONG-SUIT:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 4"
+           END-IF.
+
+      ******************************************************************
+       24-MV-SRC-NOT-KING.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 5) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 5) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE 1 TO MV-SRC-ST-I.
+           MOVE 1 TO MV-SRC-CA-I.
+           MOVE 2 TO MV-DST-ST-I.
+           MOVE 6 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 5
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "24-MV-SRC-NOT-KING:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 5"
+           END-IF.
+
+      ******************************************************************
+       25-MV-SRC-KING-DST-NOT-EMPTY.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 13) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 13) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(3, 6) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 6) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 2 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE 1 TO MV-SRC-ST-I.
+           MOVE 1 TO MV-SRC-CA-I.
+           MOVE 2 TO MV-DST-ST-I.
+           MOVE 6 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 3
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "25-MV-SRC-KING-DST-NOT-EMPTY:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+      ******************************************************************
+       26-MV-OK-SRC-NOT-KING.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 5) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 5) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(3, 6) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 6) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 2 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE 1 TO MV-SRC-ST-I.
+           MOVE 1 TO MV-SRC-CA-I.
+           MOVE 2 TO MV-DST-ST-I.
+           MOVE 6 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "26-MV-OK-SRC-NOT-KING:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF COUNT-OF-CARDS OF T-STACKS-T(1) IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "26-MV-OK-SRC-NOT-KING:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "COUNT-OF-CARDS OF T-STACKS-T(1)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 COUNT-OF-CARDS OF T-STACKS-T(1)
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF COUNT-OF-CARDS OF T-STACKS-T(2) IS EQUAL TO 2
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "26-MV-OK-SRC-NOT-KING:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "COUNT-OF-CARDS OF T-STACKS-T(1)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 COUNT-OF-CARDS OF T-STACKS-T(2)
+                 WITH NO ADVANCING 
+              DISPLAY " <> 2"
+           END-IF.
+
+      ******************************************************************
+       27-MV-OK-SRC-KING.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 3) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 3) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(2, 13) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 13) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(3, 6) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 6) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 2 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE 1 TO MV-SRC-ST-I.
+           MOVE 2 TO MV-SRC-CA-I.
+           MOVE 3 TO MV-DST-ST-I.
+           MOVE 6 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "27-MV-OK-SRC-KING:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF COUNT-OF-CARDS OF T-STACKS-T(1) IS EQUAL TO 1
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "27-MV-OK-SRC-KING:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "COUNT-OF-CARDS OF T-STACKS-T(1)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 COUNT-OF-CARDS OF T-STACKS-T(1)
+                 WITH NO ADVANCING 
+              DISPLAY " <> 1"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF COUNT-OF-CARDS OF T-STACKS-T(2) IS EQUAL TO 1
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "27-MV-OK-SRC-KING:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "COUNT-OF-CARDS OF T-STACKS-T(2)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 COUNT-OF-CARDS OF T-STACKS-T(2)
+                 WITH NO ADVANCING 
+              DISPLAY " <> 1"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF COUNT-OF-CARDS OF T-STACKS-T(3) IS EQUAL TO 1
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "27-MV-OK-SRC-KING:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "COUNT-OF-CARDS OF T-STACKS-T(3)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 COUNT-OF-CARDS OF T-STACKS-T(3)
+                 WITH NO ADVANCING 
+              DISPLAY " <> 1"
+           END-IF.
+
+      ******************************************************************
+      ******************************************************************

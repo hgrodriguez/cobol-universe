@@ -88,6 +88,14 @@
              05 CARD-IN-SCOPE.
                 26 RANK-N          PIC 99.
                 26 SUIT-N          PIC 9.
+      *         DATA WE NEED FOR MOVING CARDS IN THE TABLEAU
+      *         SOURCE STACK INDEX
+             05 MV-SRC-ST-I        PIC 9.
+      *         SOURCE CARD INDEX IN THE SOURCE STACK INDEX
+             05 MV-SRC-CA-I        PIC 99.
+      *         DESTINATION STACK INDEX
+             05 MV-DST-ST-I        PIC 9.
+      *         HOW MANY CARDS ARE IN THE TABLEAU.
              05 T-COUNT-OF-CARDS   PIC 99.
              05 T-STACKS-T OCCURS 7 TIMES INDEXED BY T-STACK-I.
       *            HOW MANY CARDS ARE IN THE STACK.

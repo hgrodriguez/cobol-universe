@@ -4,6 +4,22 @@
        DATA DIVISION.
 
        WORKING-STORAGE SECTION. 
+      ******************************************************************
+
+       01 ACCEPT-RANK              PIC 99.
+       01 SRC-SUIT-OF-CARD         PIC 9.
+       01 DST-SUIT-OF-CARD         PIC 9.
+       01 ACCEPT-S-1               PIC 9.
+       01 ACCEPT-S-2               PIC 9.
+       01 XFER.
+      *      HOW MANY CARDS ARE TO BE MOVED.
+          02 MOVE-COUNT            PIC 99.
+      *      HOW MANY CARDS ARE IN THE STOCK.
+          02 XFER-COUNT            PIC 99.
+      *      TABLE OF CARDS IN THE STOCK
+          02 XFER-T OCCURS 52 TIMES INDEXED BY XFER-I.
+             03 XFER-RANK-N        PIC 99.
+             03 XFER-SUIT-N        PIC 9.      
 
        LINKAGE SECTION. 
       ******************************************************************
@@ -88,6 +104,14 @@
              05 CARD-IN-SCOPE.
                 26 RANK-N          PIC 99.
                 26 SUIT-N          PIC 9.
+      *         DATA WE NEED FOR MOVING CARDS IN THE TABLEAU
+      *         SOURCE STACK INDEX
+             05 MV-SRC-ST-I        PIC 9.
+      *         SOURCE CARD INDEX IN THE SOURCE STACK INDEX
+             05 MV-SRC-CA-I        PIC 99.
+      *         DESTINATION STACK INDEX
+             05 MV-DST-ST-I        PIC 9.
+      *         HOW MANY CARDS ARE IN THE TABLEAU.
              05 T-COUNT-OF-CARDS   PIC 99.
              05 T-STACKS-T OCCURS 7 TIMES INDEXED BY T-STACK-I.
       *            HOW MANY CARDS ARE IN THE STACK.
@@ -114,6 +138,8 @@
                 PERFORM 04-POP-FROM-STACK
            WHEN 5
                 PERFORM 05-MANDATORY-CHECK
+           WHEN 6
+                PERFORM 06-MOVE-CARDS
            WHEN 9
                 PERFORM 99-PRINT
            END-EVALUATE
@@ -208,6 +234,7 @@
                       (SUIT-N OF CARD-IN-SCOPE IS EQUAL TO
                       SUIT-N OF CARDS-T(T-STACK-I, COUNT-OF-CARDS
                       OF T-STACKS-T(T-STACK-I)))
+
       *               MATCH FOUND -> LEAVE
                       MOVE 0 TO ERR-CODE OF TABLEAU
                       MOVE T-STACK-I TO STACK-I-IN-SCOPE
@@ -215,6 +242,127 @@
            END-PERFORM
       *    NO MATCH FOUND
            MOVE 2 TO ERR-CODE OF TABLEAU.
+
+      ******************************************************************
+       06-MOVE-CARDS.
+           IF COUNT-OF-CARDS OF T-STACKS-T(MV-SRC-ST-I)
+              IS EQUAL TO 0
+              MOVE 1 TO ERR-CODE OF TABLEAU
+              GOBACK
+           END-IF.
+
+      *    ILLEGAL INDEX INTO THE SOURCE STACK
+           IF MV-SRC-CA-I IS GREATER THAN
+              COUNT-OF-CARDS OF T-STACKS-T(MV-SRC-ST-I) 
+              MOVE 2 TO ERR-CODE OF TABLEAU
+              GOBACK
+           END-IF.
+
+           IF COUNT-OF-CARDS OF T-STACKS-T(MV-DST-ST-I) IS EQUAL TO 0
+      *       FIRST CHECK FOR KING
+              MOVE 13 TO ACCEPT-RANK
+              IF RANK-N OF CARDS-T(MV-SRC-ST-I, MV-SRC-CA-I)
+                 IS NOT EQUAL TO ACCEPT-RANK
+                 MOVE 5 TO ERR-CODE OF TABLEAU
+              ELSE
+      *          MOVE THE KING STACK AND GET OUT OF HERE
+                 DISPLAY "KING MOVE"
+                 PERFORM 80-MOVE-CARDS
+              END-IF
+              GOBACK
+           END-IF.
+
+      *    CHECK FOR RANK SUITABILITY
+           MOVE RANK-N OF CARDS-T(MV-DST-ST-I, COUNT-OF-CARDS
+              OF T-STACKS-T(MV-DST-ST-I)) TO ACCEPT-RANK
+           SUBTRACT 1 FROM ACCEPT-RANK
+
+           IF RANK-N OF CARDS-T(MV-SRC-ST-I, MV-SRC-CA-I)
+              IS NOT EQUAL TO ACCEPT-RANK
+              MOVE 3 TO ERR-CODE OF TABLEAU
+              GOBACK
+           END-IF.
+
+      *    CHECK FOR SUIT SUITABILITY
+           MOVE SUIT-N OF CARDS-T(MV-DST-ST-I, COUNT-OF-CARDS
+              OF T-STACKS-T(MV-DST-ST-I)) TO DST-SUIT-OF-CARD
+
+      *    FILL IN THE COMPLEMENTARY SUITS
+           IF DST-SUIT-OF-CARD IS EQUAL TO 1 OR
+              DST-SUIT-OF-CARD IS EQUAL TO 3
+              MOVE 2 TO ACCEPT-S-1
+              MOVE 4 TO ACCEPT-S-2
+           ELSE
+              MOVE 1 TO ACCEPT-S-1
+              MOVE 3 TO ACCEPT-S-2
+           END-IF.
+
+
+           MOVE SUIT-N OF CARDS-T(MV-SRC-ST-I, MV-SRC-CA-I)
+              TO SRC-SUIT-OF-CARD 
+
+           IF (SRC-SUIT-OF-CARD IS NOT EQUAL TO ACCEPT-S-1)
+      *       FIRST OPTION IS ALREADY WRONG
+              IF (SRC-SUIT-OF-CARD IS NOT EQUAL TO ACCEPT-S-2)
+      *          SECOND OPTION IS A MISS, TOO
+                 MOVE 4 TO ERR-CODE OF TABLEAU
+                 GOBACK
+              END-IF
+           END-IF.
+
+      *    SO HERE WE MOVE THE CARDS, AS EVERYTHING SEEMS OK
+           PERFORM 80-MOVE-CARDS.
+
+      ******************************************************************
+       80-MOVE-CARDS.
+      *    SO HERE WE MOVE THE CARDS, AS EVERYTHING SEEMS OK
+      *    CALCULATE HOW MANY CARDS NEED TO MOVE
+           MOVE COUNT-OF-CARDS OF T-STACKS-T(MV-SRC-ST-I)
+              TO MOVE-COUNT
+           SUBTRACT MV-SRC-CA-I FROM MOVE-COUNT
+           ADD 1 TO MOVE-COUNT
+
+      *    RESET COUNTER FOR XFER TABLE
+           MOVE 0 TO XFER-COUNT
+
+      *    LOOP NOW OVER THE COUNT OF CARDS TO BE MOVED
+      *    WE STORE THEM IN THE XFER TABLE
+           PERFORM VARYING MOVE-COUNT
+              FROM MOVE-COUNT BY -1
+              UNTIL MOVE-COUNT = 0
+
+      *            DO NOT RE-INVENT THE WHEEL
+      *            WE KNOW HOW TO POP A CARD FROM A STACK IN THE
+      *            TABLEAU
+                   MOVE MV-SRC-ST-I TO STACK-I-IN-SCOPE
+                   PERFORM 04-POP-FROM-STACK
+      *            MOVE THIS POPPED CARD INTO THE XFER TABLE
+                   ADD 1 TO XFER-COUNT
+                   MOVE RANK-N OF CARD-IN-SCOPE
+                      TO XFER-RANK-N OF XFER-T(XFER-COUNT)
+                   MOVE SUIT-N OF CARD-IN-SCOPE
+                      TO XFER-SUIT-N OF XFER-T(XFER-COUNT)
+           END-PERFORM.
+
+      *    OK, HERE WE HAVE ALL CARDS OF THE PORTION TO MOVE
+      *    STORED IN THE XFER TABLE
+      *    NOW WE REMOVE THOSE IN REVERSE ORDER INTO THE TABLEAU
+           PERFORM VARYING XFER-I
+              FROM XFER-COUNT BY -1
+              UNTIL XFER-I IS EQUAL TO 0
+      *            WE KNOW HOW TO PUSH A CARD TO A STACK IN THE
+      *            TABLEAU
+                   MOVE XFER-RANK-N OF XFER-T(XFER-COUNT)
+                      TO RANK-N OF CARD-IN-SCOPE
+                   MOVE XFER-SUIT-N OF XFER-T(XFER-COUNT)
+                      TO SUIT-N OF CARD-IN-SCOPE
+
+                   MOVE MV-DST-ST-I TO STACK-I-IN-SCOPE
+                   MOVE 3 TO OP-CODE OF TABLEAU
+                   PERFORM 03-PUSH-TO-STACK
+           END-PERFORM.
+           
+           MOVE 0 TO ERR-CODE OF TABLEAU.
 
       ******************************************************************
        99-PRINT.
