@@ -112,6 +112,8 @@
                 PERFORM 03-PUSH-TO-STACK
            WHEN 4
                 PERFORM 04-POP-FROM-STACK
+           WHEN 5
+                PERFORM 05-MANDATORY-CHECK
            WHEN 9
                 PERFORM 99-PRINT
            END-EVALUATE
@@ -189,6 +191,30 @@
            SUBTRACT 1 FROM T-COUNT-OF-CARDS OF TABLEAU 
            SUBTRACT 1 FROM COUNT-OF-CARDS OF
               T-STACKS-T(STACK-I-IN-SCOPE).
+
+      ******************************************************************
+       05-MANDATORY-CHECK.
+           IF T-COUNT-OF-CARDS OF TABLEAU IS EQUAL TO 0
+              MOVE 1 TO ERR-CODE OF TABLEAU
+              GOBACK
+           END-IF.
+
+           PERFORM VARYING T-STACK-I
+              FROM 1 BY 1
+              UNTIL T-STACK-I > 7
+                   IF (RANK-N OF CARD-IN-SCOPE IS EQUAL TO
+                      RANK-N OF CARDS-T(T-STACK-I, COUNT-OF-CARDS
+                      OF T-STACKS-T(T-STACK-I))) AND
+                      (SUIT-N OF CARD-IN-SCOPE IS EQUAL TO
+                      SUIT-N OF CARDS-T(T-STACK-I, COUNT-OF-CARDS
+                      OF T-STACKS-T(T-STACK-I)))
+      *               MATCH FOUND -> LEAVE
+                      MOVE 0 TO ERR-CODE OF TABLEAU
+                      MOVE T-STACK-I TO STACK-I-IN-SCOPE
+                      GOBACK
+           END-PERFORM
+      *    NO MATCH FOUND
+           MOVE 2 TO ERR-CODE OF TABLEAU.
 
       ******************************************************************
        99-PRINT.

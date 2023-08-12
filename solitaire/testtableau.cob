@@ -124,10 +124,41 @@
            PERFORM 01-RESET.
            PERFORM 06-POP-FROM-NON-EMPTY-STACK.
 
-      * c
+           PERFORM 01-RESET.
+           PERFORM 07-MANDATORY-EMPTY-TABLEAU.
+
+           PERFORM 01-RESET.
+           PERFORM 08-MANDATORY-NONEMPTY-NOMATCH.
+
+           PERFORM 01-RESET.
+           PERFORM 09-MANDATORY-NONEMPTY-MATCH1.
+      
+           PERFORM 01-RESET.
+           PERFORM 10-MANDATORY-NONEMPTY-MATCH2.
+      
+           PERFORM 01-RESET.
+           PERFORM 11-MANDATORY-NONEMPTY-MATCH3.
+      
+           PERFORM 01-RESET.
+           PERFORM 12-MANDATORY-NONEMPTY-MATCH4.
+      
+           PERFORM 01-RESET.
+           PERFORM 13-MANDATORY-NONEMPTY-NOT-TOS.
+
            DISPLAY "TESTS RUN: " TESTS-RUN
            DISPLAY "SUCCESSFUL / FAILED: " TESTS-OK " / " TESTS-NOK
            GOBACK.
+
+      ******************************************************************
+       01-RESET.
+           CALL 'CARDS' USING GAME
+           END-CALL.
+           MOVE 1 TO OP-CODE OF STOCK.
+           CALL 'STOCK' USING GAME
+           END-CALL.
+           MOVE 1 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.
 
       ******************************************************************
        02-TEST-EMPTY.
@@ -472,12 +503,656 @@
            END-IF.
 
       ******************************************************************
-       01-RESET.
-           CALL 'CARDS' USING GAME
-           END-CALL.
-           MOVE 1 TO OP-CODE OF STOCK.
-           CALL 'STOCK' USING GAME
-           END-CALL.
-           MOVE 1 TO OP-CODE OF TABLEAU.
+       07-MANDATORY-EMPTY-TABLEAU.
+           MOVE 5 TO OP-CODE OF TABLEAU.
            CALL 'TABLEAU' USING GAME
-           END-CALL.
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 1
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "07-MANDATORY-EMPTY-TABLEAU:" WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 1"
+           END-IF.
+
+      ******************************************************************
+       08-MANDATORY-NONEMPTY-NOMATCH.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(1, 10) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(1, 10) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 7 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(2, 3) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 3) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 5 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(3, 8) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 8) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 3 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(4, 9) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(4, 9) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+      *    CHECK FOR MANDATORY CARD EXISTING
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 2
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "08-MANDATORY-NONEMPTY-NOMATCH:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 2"
+           END-IF.
+
+      ******************************************************************
+       09-MANDATORY-NONEMPTY-MATCH1.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 7 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(2, 3) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 3) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 5 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(3, 8) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 8) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 3 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(4, 9) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(4, 9) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+      *    CHECK FOR MANDATORY CARD EXISTING
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "09-MANDATORY-NONEMPTY-MATCH1:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF STACK-I-IN-SCOPE IS EQUAL TO 7
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "09-MANDATORY-NONEMPTY-MATCH1:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "STACK-I-IN-SCOPE="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 STACK-I-IN-SCOPE
+                 WITH NO ADVANCING 
+              DISPLAY " <> 7"
+           END-IF.
+
+      ******************************************************************
+       10-MANDATORY-NONEMPTY-MATCH2.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 7 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(2, 3) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 3) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 5 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(3, 8) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 8) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 3 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(4, 9) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(4, 9) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+      *    CHECK FOR MANDATORY 1. CARD EXISTING
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "10-MANDATORY-NONEMPTY-MATCH2:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE(1)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF STACK-I-IN-SCOPE IS EQUAL TO 7
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "10-MANDATORY-NONEMPTY-MATCH2:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "STACK-I-IN-SCOPE(1)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 STACK-I-IN-SCOPE
+                 WITH NO ADVANCING 
+              DISPLAY " <> 7"
+           END-IF.
+
+      *    CHECK FOR MANDATORY 2. CARD EXISTING
+           MOVE RANK-N OF CARD-RANK(3, 8) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 8) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "10-MANDATORY-NONEMPTY-MATCH2:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE(2)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF STACK-I-IN-SCOPE IS EQUAL TO 3
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "10-MANDATORY-NONEMPTY-MATCH2:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "STACK-I-IN-SCOPE(2)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 STACK-I-IN-SCOPE
+                 WITH NO ADVANCING 
+              DISPLAY " <> 3"
+           END-IF.
+
+      ******************************************************************
+       11-MANDATORY-NONEMPTY-MATCH3.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 7 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(2, 3) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 3) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 5 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(3, 8) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 8) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 3 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(4, 9) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(4, 9) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+      *    CHECK FOR MANDATORY 1. CARD EXISTING
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "11-MANDATORY-NONEMPTY-MATCH3:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE(1)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF STACK-I-IN-SCOPE IS EQUAL TO 7
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "11-MANDATORY-NONEMPTY-MATCH3:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "STACK-I-IN-SCOPE(1)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 STACK-I-IN-SCOPE
+                 WITH NO ADVANCING 
+              DISPLAY " <> 7"
+           END-IF.
+
+      *    CHECK FOR MANDATORY 2. CARD EXISTING
+           MOVE RANK-N OF CARD-RANK(3, 8) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 8) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "11-MANDATORY-NONEMPTY-MATCH3:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE(2)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF STACK-I-IN-SCOPE IS EQUAL TO 3
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "11-MANDATORY-NONEMPTY-MATCH3:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "STACK-I-IN-SCOPE(2)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 STACK-I-IN-SCOPE
+                 WITH NO ADVANCING 
+              DISPLAY " <> 3"
+           END-IF.
+
+      *    CHECK FOR MANDATORY 3. CARD EXISTING
+           MOVE RANK-N OF CARD-RANK(2, 3) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 3) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "11-MANDATORY-NONEMPTY-MATCH3:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE(3)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF STACK-I-IN-SCOPE IS EQUAL TO 5
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "11-MANDATORY-NONEMPTY-MATCH3:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "STACK-I-IN-SCOPE(3)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 STACK-I-IN-SCOPE
+                 WITH NO ADVANCING 
+              DISPLAY " <> 5"
+           END-IF.
+
+      ******************************************************************
+       12-MANDATORY-NONEMPTY-MATCH4.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 7 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(2, 3) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 3) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 5 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(3, 8) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 8) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 3 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(4, 9) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(4, 9) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+      *    CHECK FOR MANDATORY 1. CARD EXISTING
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "12-MANDATORY-NONEMPTY-MATCH4:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE(1)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF STACK-I-IN-SCOPE IS EQUAL TO 7
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "12-MANDATORY-NONEMPTY-MATCH4:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "STACK-I-IN-SCOPE(1)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 STACK-I-IN-SCOPE
+                 WITH NO ADVANCING 
+              DISPLAY " <> 7"
+           END-IF.
+
+      *    CHECK FOR MANDATORY 2. CARD EXISTING
+           MOVE RANK-N OF CARD-RANK(3, 8) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 8) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "12-MANDATORY-NONEMPTY-MATCH4:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE(2)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF STACK-I-IN-SCOPE IS EQUAL TO 3
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "12-MANDATORY-NONEMPTY-MATCH4:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "STACK-I-IN-SCOPE(2)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 STACK-I-IN-SCOPE
+                 WITH NO ADVANCING 
+              DISPLAY " <> 3"
+           END-IF.
+
+      *    CHECK FOR MANDATORY 3. CARD EXISTING
+           MOVE RANK-N OF CARD-RANK(2, 3) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 3) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "12-MANDATORY-NONEMPTY-MATCH4:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE(3)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF STACK-I-IN-SCOPE IS EQUAL TO 5
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "12-MANDATORY-NONEMPTY-MATCH4:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "STACK-I-IN-SCOPE(3)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 STACK-I-IN-SCOPE
+                 WITH NO ADVANCING 
+              DISPLAY " <> 5"
+           END-IF.
+
+      *    CHECK FOR MANDATORY 4. CARD EXISTING
+           MOVE RANK-N OF CARD-RANK(4, 9) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(4, 9) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "12-MANDATORY-NONEMPTY-MATCH4:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE(3)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
+           ADD 1 TO TESTS-RUN
+           IF STACK-I-IN-SCOPE IS EQUAL TO 1
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "12-MANDATORY-NONEMPTY-MATCH4:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "STACK-I-IN-SCOPE(3)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 STACK-I-IN-SCOPE
+                 WITH NO ADVANCING 
+              DISPLAY " <> 5"
+           END-IF.
+
+      ******************************************************************
+       13-MANDATORY-NONEMPTY-NOT-TOS.
+      *    FILL TABLEAU WITH SOME CARDS
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 7 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(2, 3) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 3) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 7 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(3, 8) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(3, 8) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 3 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           MOVE RANK-N OF CARD-RANK(4, 9) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(4, 9) TO SUIT-N OF CARD-IN-SCOPE.
+           MOVE 1 TO STACK-I-IN-SCOPE.
+           MOVE 3 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+      *    CHECK FOR MANDATORY CARD EXISTING, BUT NOT TOS
+           MOVE RANK-N OF CARD-RANK(2, 1) TO RANK-N OF CARD-IN-SCOPE.
+           MOVE SUIT-N OF CARD-SUIT(2, 1) TO SUIT-N OF CARD-IN-SCOPE.
+
+           MOVE 5 TO OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING GAME
+           END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF ERR-CODE OF TABLEAU IS EQUAL TO 2
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "13-MANDATORY-NONEMPTY-NOT-TOS:"
+                 WITH NO ADVANCING 
+              DISPLAY
+                 "ERR-CODE(1)="
+                 WITH NO ADVANCING 
+              DISPLAY
+                 ERR-CODE OF TABLEAU
+                 WITH NO ADVANCING 
+              DISPLAY " <> 2"
+           END-IF.
