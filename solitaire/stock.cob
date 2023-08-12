@@ -87,6 +87,10 @@
              03 CARD-FETCHED.
                 26 RANK-N               PIC 99.
                 26 SUIT-N               PIC 9.
+      *         TOP OF STOCK PRINT REPRESENTATION
+             03 TOS-PEEK                PIC 9.
+             03 TOS-RANK-A              PIC X.
+             03 TOS-SUIT-A              PIC X.
       *      HOW MANY CARDS ARE IN THE STOCK.
       *      IN THE INITIALIZATION PHASE, THIS COUNTER GOES UP,
       *        AS IT COUNTS THE CARDS TRANFERRED INTO THE STOCK
@@ -138,6 +142,10 @@
                 PERFORM 02-RANDOMIZE-STOCK
            WHEN 3
                 PERFORM 03-FETCH-CARD
+           WHEN 4
+                PERFORM 04-TOGGLE-PEEK
+           WHEN 5
+                PERFORM 05-PRINT-TOS
            WHEN 9
                 PERFORM 99-PRINT-STOCK
            END-EVALUATE
@@ -170,6 +178,7 @@
                    END-PERFORM
            END-PERFORM.
 
+           MOVE 0 TO TOS-PEEK.
 
       ******************************************************************
        02-RANDOMIZE-STOCK.
@@ -208,6 +217,33 @@
            MOVE STOCK-T(COUNT-OF-CARDS OF STOCK) TO CARD-FETCHED
            SUBTRACT 1 FROM COUNT-OF-CARDS OF STOCK.
 
+      ******************************************************************
+       04-TOGGLE-PEEK.
+           IF TOS-PEEK IS EQUAL TO 0
+              MOVE 1 TO TOS-PEEK
+           ELSE
+              MOVE 0 TO TOS-PEEK
+           END-IF.
+           
+
+      ******************************************************************
+       05-PRINT-TOS.
+           IF TOS-PEEK IS EQUAL TO 0 OR
+              COUNT-OF-CARDS OF STOCK IS EQUAL TO 0
+              MOVE 'X' TO TOS-RANK-A 
+              MOVE 'X' TO TOS-SUIT-A 
+           ELSE
+              MOVE RANK-A OF CARDS-RANK-T(SUIT-N OF
+                 STOCK-T(COUNT-OF-CARDS OF STOCK),
+                 RANK-N OF STOCK-T(COUNT-OF-CARDS OF STOCK))
+                 TO TOS-RANK-A
+
+              MOVE SUIT-A OF CARDS-SUIT-T(SUIT-N OF
+                 STOCK-T(COUNT-OF-CARDS OF STOCK),
+                 RANK-N OF STOCK-T(COUNT-OF-CARDS OF STOCK))
+                 TO TOS-SUIT-A
+           END-IF.
+      
       ******************************************************************
        10-CREATE-SHADOW-STOCK.
            MOVE 0 TO SHADOW-STOCK-I.

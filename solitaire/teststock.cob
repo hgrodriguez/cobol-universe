@@ -5,6 +5,9 @@
 
        WORKING-STORAGE SECTION.
 
+       01 EXPECTED-RANK-A          PIC X.
+       01 EXPECTED-SUIT-A          PIC X.
+
       ******************************************************************
       *   THE GAME OVERALL.
        01 GAME.
@@ -66,6 +69,10 @@
              03 CARD-FETCHED.
                 26 RANK-N          PIC 99.
                 26 SUIT-N          PIC 9.
+      *         TOP OF STOCK PRINT REPRESENTATION
+             03 TOS-PEEK           PIC 9.
+             03 TOS-RANK-A         PIC X.
+             03 TOS-SUIT-A         PIC X.
       *      HOW MANY CARDS ARE IN THE STOCK.
       *      IN THE INITIALIZATION PHASE, THIS COUNTER GOES UP,
       *        AS IT COUNTS THE CARDS TRANFERRED INTO THE STOCK
@@ -145,6 +152,18 @@
            PERFORM 06-FETCH-28-TO-FILL-TABLEAU
 
            PERFORM 01-STOCK-RESET.
+           PERFORM 20-TOGGLE-PEEK.
+
+           PERFORM 01-STOCK-RESET.
+           PERFORM 21-PRINT-NO-PEEK.
+
+           PERFORM 01-STOCK-RESET.
+           PERFORM 22-PRINT-PEEK.
+
+           PERFORM 01-STOCK-RESET.
+           PERFORM 23-PRINT-EMPTY-STOCK.
+
+           PERFORM 01-STOCK-RESET.
       *    PERFORM XX-REMOVE FROM- STOCK-7-NEXT
 
            PERFORM 01-STOCK-RESET.
@@ -159,6 +178,16 @@
            MOVE 1 TO OP-CODE OF STOCK.
            CALL 'STOCK' USING GAME
            END-CALL.           
+
+           ADD 1 TO TESTS-RUN
+           IF TOS-PEEK IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "01-TEST-FILL-STOCK:" WITH NO ADVANCING 
+              DISPLAY "TOS-PEEK=" TOS-PEEK WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF
 
 
            MOVE 0 TO T-COUNTER.
@@ -399,6 +428,145 @@
               DISPLAY COUNT-OF-CARDS OF STOCK WITH NO ADVANCING 
               DISPLAY " <> T-COUNTER-CHECK=" WITH NO ADVANCING 
               DISPLAY T-COUNTER-CHECK
+           END-IF.
+
+      ******************************************************************
+       20-TOGGLE-PEEK.
+           ADD 1 TO TESTS-RUN
+           IF TOS-PEEK IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "20-TOGGLE-PEEK:" WITH NO ADVANCING 
+              DISPLAY "TOS-PEEK=" TOS-PEEK WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF
+           MOVE 4 TO OP-CODE OF STOCK.
+           CALL 'STOCK' USING GAME
+           END-CALL
+           ADD 1 TO TESTS-RUN
+           IF TOS-PEEK IS EQUAL TO 1
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "20-TOGGLE-PEEK:" WITH NO ADVANCING 
+              DISPLAY "TOS-PEEK=" TOS-PEEK WITH NO ADVANCING 
+              DISPLAY " <> 1"
+           END-IF.
+
+      ******************************************************************
+       21-PRINT-NO-PEEK.
+           MOVE 5 TO OP-CODE OF STOCK.
+           CALL 'STOCK' USING GAME
+           END-CALL
+           ADD 1 TO TESTS-RUN
+           IF TOS-RANK-A IS EQUAL TO 'X'
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
+              DISPLAY "TOS-RANK-A=" TOS-RANK-A WITH NO ADVANCING 
+              DISPLAY " <> X"
+           END-IF.
+           ADD 1 TO TESTS-RUN
+           IF TOS-SUIT-A IS EQUAL TO 'X'
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
+              DISPLAY "TOS-SUIT-A=" TOS-SUIT-A WITH NO ADVANCING 
+              DISPLAY " <> X"
+           END-IF.
+
+      ******************************************************************
+       22-PRINT-PEEK.
+           MOVE RANK-A OF CARDS-RANK-T(SUIT-N OF STOCK-T(52),
+              RANK-N OF STOCK-T(52)) TO EXPECTED-RANK-A
+
+           MOVE SUIT-A OF CARDS-SUIT-T(SUIT-N OF STOCK-T(52),
+              RANK-N OF STOCK-T(52)) TO EXPECTED-SUIT-A
+
+           MOVE 4 TO OP-CODE OF STOCK.
+           CALL 'STOCK' USING GAME
+           END-CALL
+
+           MOVE 5 TO OP-CODE OF STOCK.
+           CALL 'STOCK' USING GAME
+           END-CALL
+           ADD 1 TO TESTS-RUN
+           IF TOS-RANK-A IS EQUAL TO EXPECTED-RANK-A
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "22-PRINT-PEEK:" WITH NO ADVANCING 
+              DISPLAY "TOS-RANK-A=" TOS-RANK-A WITH NO ADVANCING 
+              DISPLAY " <> " EXPECTED-RANK-A
+           END-IF.
+           ADD 1 TO TESTS-RUN
+           IF TOS-SUIT-A IS EQUAL TO EXPECTED-SUIT-A
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "22-PRINT-PEEK:" WITH NO ADVANCING 
+              DISPLAY "TOS-SUIT-A=" TOS-SUIT-A WITH NO ADVANCING 
+              DISPLAY " <> " EXPECTED-SUIT-A
+           END-IF.
+
+      ******************************************************************
+       23-PRINT-EMPTY-STOCK.
+           PERFORM VARYING T-COUNTER
+              FROM 1 BY 1
+              UNTIL T-COUNTER IS GREATER THAN 53
+                   MOVE 3 TO OP-CODE OF STOCK
+                   CALL 'STOCK' USING GAME
+                   END-CALL
+           END-PERFORM.
+
+           MOVE 5 TO OP-CODE OF STOCK.
+           CALL 'STOCK' USING GAME
+           END-CALL
+           ADD 1 TO TESTS-RUN
+           IF TOS-RANK-A IS EQUAL TO 'X'
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
+              DISPLAY "TOS-RANK-A=" TOS-RANK-A WITH NO ADVANCING 
+              DISPLAY " <> X"
+           END-IF.
+           ADD 1 TO TESTS-RUN
+           IF TOS-SUIT-A IS EQUAL TO 'X'
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
+              DISPLAY "TOS-SUIT-A=" TOS-SUIT-A WITH NO ADVANCING 
+              DISPLAY " <> X"
+           END-IF.
+
+           MOVE 4 TO OP-CODE OF STOCK.
+           CALL 'STOCK' USING GAME
+           END-CALL
+           MOVE 5 TO OP-CODE OF STOCK.
+           CALL 'STOCK' USING GAME
+           END-CALL
+           ADD 1 TO TESTS-RUN
+           IF TOS-RANK-A IS EQUAL TO 'X'
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
+              DISPLAY "TOS-RANK-A=" TOS-RANK-A WITH NO ADVANCING 
+              DISPLAY " <> X"
+           END-IF.
+           ADD 1 TO TESTS-RUN
+           IF TOS-SUIT-A IS EQUAL TO 'X'
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
+              DISPLAY "TOS-SUIT-A=" TOS-SUIT-A WITH NO ADVANCING 
+              DISPLAY " <> X"
            END-IF.
 
       ******************************************************************

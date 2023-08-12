@@ -83,6 +83,10 @@
              03 CARD-FETCHED.
                 26 RANK-N          PIC 99.
                 26 SUIT-N          PIC 9.
+      *         TOP OF STOCK PRINT REPRESENTATION
+             03 TOS-PEEK           PIC 9.
+             03 TOS-RANK-A         PIC X.
+             03 TOS-SUIT-A         PIC X.
       *      HOW MANY CARDS ARE IN THE STOCK.
       *      IN THE INITIALIZATION PHASE, THIS COUNTER GOES UP,
       *        AS IT COUNTS THE CARDS TRANFERRED INTO THE STOCK
@@ -266,7 +270,6 @@
                  MOVE 5 TO ERR-CODE OF TABLEAU
               ELSE
       *          MOVE THE KING STACK AND GET OUT OF HERE
-                 DISPLAY "KING MOVE"
                  PERFORM 80-MOVE-CARDS
               END-IF
               GOBACK
