@@ -1,5 +1,5 @@
        IDENTIFICATION DIVISION.
-       PROGRAM-ID. FOUNDATION.
+       PROGRAM-ID. TABLEAU.
 
        DATA DIVISION.
 
@@ -78,9 +78,9 @@
                 06 SUIT-N          PIC 9.      
       *      DEFINES ALL TABLEAU STACKS OF THE GAME
           02 TABLEAU.
-      *      THE OPERATION REQUESTED TO BE PERFORMED ON THE TABLEAU
+      *         THE OPERATION REQUESTED TO BE PERFORMED ON THE TABLEAU
              05 OP-CODE            PIC 9.
-      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
+      *         THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
              05 ERR-CODE           PIC 9.
       *         THE STACK-INDEX IN SCOPE FOR THE REQUESTED OPERATION
              05 STACK-I-IN-SCOPE   PIC 99.
@@ -97,50 +97,98 @@
                    26 RANK-N       PIC 99.
                    26 SUIT-N       PIC 9.
 
+
       ******************************************************************
        PROCEDURE DIVISION USING GAME.
-           EVALUATE OP-CODE OF FOUNDATION 
+      *    PRE-CONDITION: 
+      *       CARDS, STOCK ARE FILLED.
+
+           EVALUATE OP-CODE OF TABLEAU
            WHEN 1
                 PERFORM 01-RESET
            WHEN 2
-                PERFORM 01-PUSH-1-CARD
+                PERFORM 02-INIT-FROM-STOCK
+           WHEN 3
+                PERFORM 03-PUSH-TO-STACK
+           WHEN 4
+                PERFORM 04-POP-FROM-STACK
+           WHEN 9
+                PERFORM 99-PRINT
            END-EVALUATE
 
            GOBACK.
-       
+
       ******************************************************************
        01-RESET.
-      *    RUN THROUGH ALL SUITS
-           PERFORM VARYING F-STACK-I
+           MOVE 0 TO ERR-CODE OF TABLEAU.
+           MOVE 0 TO T-COUNT-OF-CARDS OF TABLEAU.
+
+           PERFORM VARYING T-STACK-I
               FROM 1 BY 1
-              UNTIL F-STACK-I > 4
-                   MOVE 0 TO COUNT-OF-CARDS OF F-STACKS-T(F-STACK-I)
-                   MOVE 1 TO NEXT-RANK OF F-STACKS-T(F-STACK-I)
-                   MOVE 'N' TO IS-FULL OF F-STACKS-T(F-STACK-I)
-                   MOVE 'X' TO RANK-A OF F-STACKS-T(F-STACK-I)
-                   MOVE 'X' TO SUIT-A OF F-STACKS-T(F-STACK-I)
+              UNTIL T-STACK-I > 7
+                   MOVE 0 TO COUNT-OF-CARDS OF T-STACKS-T(T-STACK-I)
            END-PERFORM.
 
-           MOVE 0 TO ERR-CODE OF FOUNDATION.
+      ******************************************************************
+       02-INIT-FROM-STOCK.
+           PERFORM VARYING T-STACK-I
+              FROM 1 BY 1
+              UNTIL T-STACK-I > 7
+
+                   PERFORM VARYING CARDS-T-I
+                      FROM 1 BY 1
+                      UNTIL CARDS-T-I > T-STACK-I
+
+                           MOVE 3 TO OP-CODE OF STOCK
+                           CALL 'STOCK' USING GAME
+                           END-CALL
+
+                           MOVE CARD-FETCHED OF STOCK TO CARDS-T
+                              (T-STACK-I, CARDS-T-I)
+
+                           ADD 1 TO T-COUNT-OF-CARDS OF TABLEAU 
+                           ADD 1 TO COUNT-OF-CARDS OF T-STACKS-T
+                              (T-STACK-I)
+                   END-PERFORM
+           END-PERFORM.
 
       ******************************************************************
-       01-PUSH-1-CARD.
-           IF COUNT-OF-CARDS OF F-STACKS-T(SUIT-TO-PUSH) IS EQUAL TO 13
-              MOVE 1 TO ERR-CODE OF FOUNDATION
+       03-PUSH-TO-STACK.
+           ADD 1 TO T-COUNT-OF-CARDS OF TABLEAU 
+           ADD 1 TO COUNT-OF-CARDS OF T-STACKS-T(STACK-I-IN-SCOPE).
+
+           MOVE RANK-N OF CARD-IN-SCOPE TO
+              RANK-N OF CARDS-T(STACK-I-IN-SCOPE, COUNT-OF-CARDS
+              OF T-STACKS-T(STACK-I-IN-SCOPE))
+
+           MOVE SUIT-N OF CARD-IN-SCOPE TO
+              SUIT-N OF CARDS-T(STACK-I-IN-SCOPE, COUNT-OF-CARDS
+              OF T-STACKS-T(STACK-I-IN-SCOPE)).
+
+      ******************************************************************
+       04-POP-FROM-STACK.
+           IF T-COUNT-OF-CARDS OF TABLEAU IS EQUAL TO 0
+              MOVE 1 TO ERR-CODE OF TABLEAU
               GOBACK
            END-IF
-      *    STACK HAS STILL SPACE FOR ANOTHER CARD
-           ADD 1 TO COUNT-OF-CARDS OF F-STACKS-T(SUIT-TO-PUSH).
-           ADD 1 TO NEXT-RANK OF F-STACKS-T(SUIT-TO-PUSH).
-           IF COUNT-OF-CARDS OF F-STACKS-T(SUIT-TO-PUSH)
-              IS EQUAL TO 13 THEN
-              MOVE 'Y' TO IS-FULL OF F-STACKS-T(SUIT-TO-PUSH)
-           END-IF.
-      *    DEFINE THE PICTURE OF THE TOP CARD
-           MOVE RANK-A OF CARDS-RANK-T(SUIT-TO-PUSH,
-              COUNT-OF-CARDS OF F-STACKS-T(SUIT-TO-PUSH)) TO RANK-A OF
-              F-STACKS-T(SUIT-TO-PUSH).
 
-           MOVE SUIT-A OF CARDS-RANK-T(SUIT-TO-PUSH,
-              COUNT-OF-CARDS OF F-STACKS-T(SUIT-TO-PUSH)) TO SUIT-A OF
-              F-STACKS-T(SUIT-TO-PUSH).
+           IF COUNT-OF-CARDS OF T-STACKS-T(STACK-I-IN-SCOPE)
+              IS EQUAL TO 0
+              MOVE 2 TO ERR-CODE OF TABLEAU
+              GOBACK
+           END-IF.
+
+           MOVE RANK-N OF CARDS-T(STACK-I-IN-SCOPE, COUNT-OF-CARDS
+              OF T-STACKS-T(STACK-I-IN-SCOPE)) TO
+              RANK-N OF CARD-IN-SCOPE
+
+           MOVE SUIT-N OF CARDS-T(STACK-I-IN-SCOPE, COUNT-OF-CARDS
+              OF T-STACKS-T(STACK-I-IN-SCOPE)) TO
+              SUIT-N OF CARD-IN-SCOPE
+
+           SUBTRACT 1 FROM T-COUNT-OF-CARDS OF TABLEAU 
+           SUBTRACT 1 FROM COUNT-OF-CARDS OF
+              T-STACKS-T(STACK-I-IN-SCOPE).
+
+      ******************************************************************
+       99-PRINT.

@@ -94,6 +94,12 @@
           02 STOCK.
       *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
              03 OP-CODE            PIC 9.
+      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
+             03 ERR-CODE           PIC 9.
+      *      THE CARD FETCHED FROM THE STOCK
+             03 CARD-FETCHED.
+                26 RANK-N          PIC 99.
+                26 SUIT-N          PIC 9.
       *      HOW MANY CARDS ARE IN THE STOCK.
       *      IN THE INITIALIZATION PHASE, THIS COUNTER GOES UP,
       *        AS IT COUNTS THE CARDS TRANFERRED INTO THE STOCK
@@ -103,6 +109,27 @@
              03 STOCK-T OCCURS 52 TIMES INDEXED BY STOCK-I.
                 06 RANK-N          PIC 99.
                 06 SUIT-N          PIC 9.
+      *      DEFINES ALL TABLEAU STACKS OF THE GAME
+          02 TABLEAU.
+      *      THE OPERATION REQUESTED TO BE PERFORMED ON THE TABLEAU
+             05 OP-CODE            PIC 9.
+      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
+             05 ERR-CODE           PIC 9.
+      *         THE STACK-INDEX IN SCOPE FOR THE REQUESTED OPERATION
+             05 STACK-I-IN-SCOPE   PIC 99.
+      *         THE CARD IN SCOPE FOR THE REQUESTED OPERATION
+             05 CARD-IN-SCOPE.
+                26 RANK-N          PIC 99.
+                26 SUIT-N          PIC 9.
+             05 T-COUNT-OF-CARDS   PIC 99.
+             05 T-STACKS-T OCCURS 7 TIMES INDEXED BY T-STACK-I.
+      *            HOW MANY CARDS ARE IN THE STACK.
+                10 COUNT-OF-CARDS  PIC 99 VALUE 0.
+      *            THE CARDS IN ONE STACK
+                10 CARDS-T OCCURS 52 TIMES INDEXED BY CARDS-T-I.
+                   26 RANK-N       PIC 99.
+                   26 SUIT-N       PIC 9.
+
 
       ******************************************************************
        PROCEDURE DIVISION USING GAME.
