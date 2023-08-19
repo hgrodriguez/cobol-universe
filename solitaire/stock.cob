@@ -31,26 +31,46 @@
        01 GAME.
       *      DEFINES ALL POSSIBLE CARDS IN THE GAME
           02 CARDS.
+      *      THE REQUES-RESPONSE-BLOCK
+             03 REQ-RSP-BLOCK.
+      *            THE OPERATION REQUESTED TO BE PERFORMED
+      *            1 = INITIALIZE CARDS
+                04 REQ-OP-CODE          PIC 9.
+      *            RANK NUMBER
+                04 REQ-RANK-N           PIC 99.
+      *            SUIT NUMBER
+                04 REQ-SUIT-N           PIC 9.
+      *            THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
+      *            1 = ILLEGAL OP
+      *            2 = ILLEGAL RANK: LOWER THAN MIN
+      *            3 = ILLEGAL RANK: HIGHER THAN MAX
+      *            4 = ILLEGAL SUIT: LOWER THAN MIN
+      *            5 = ILLEGAL SUIT: HIGHER THAN MAX
+                04 RSP-ERR-CODE         PIC 99.
+      *            RANK ALPHA CODE OF REQUESTED RANK NUMBER
+                04 RSP-RANK-A           PIC X.
+      *            SUIT ALPHA CODE OF REQUESTED SUIT NUMBER
+                04 RSP-SUIT-A           PIC X.
       *         TABLE OF CARDS IN THE GAME
-             04 CARDS-SUIT-T OCCURS 4 TIMES INDEXED BY CARDS-S-I.
-                05 CARDS-RANK-T OCCURS 13 TIMES INDEXED BY CARDS-R-I.
-                   06 CARD-RANK.
+                04 CARDS-SUIT-T OCCURS 4 TIMES INDEXED BY CARDS-S-I.
+                   05 CARDS-RANK-T OCCURS 13 TIMES INDEXED BY CARDS-R-I.
+                      06 CARD-RANK.
       *                  ALPHA CODE OF RANK:
       *                  A,2,3,4,5,6,7,8,9,T,J,Q,K             
-                      07 RANK-A         PIC X.
+                         07 RANK-A      PIC X.
       *                  NUMBER CODE OF RANK:
       *                  1 - 13
-                      07 RANK-N         PIC 99.
-                   06 CARD-SUIT.
+                         07 RANK-N      PIC 99.
+                      06 CARD-SUIT.
       *                  ALPHA CODE OF SUIT:
       *                  D(IAMONDS),C(LUB),H(EARTS),S(PADES)
-                      07 SUIT-A         PIC X.
+                         07 SUIT-A      PIC X.
       *                  COLOR OF SUIT:
       *                  R(ED), B(LACK)
-                      07 SUIT-C         PIC X.
+                         07 SUIT-C      PIC X.
       *                  NUMBER CODE OF SUIT:
       *                  1 - 4
-                      07 SUIT-N         PIC 9.
+                         07 SUIT-N      PIC 9.
       *      DEFINES ALL FOUNDATION STACKS OF THE GAME
           02 FOUNDATION.
       *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
@@ -135,6 +155,7 @@
       *    PRE-CONDITION: 
       *       CARDS. ARE FILLED, AS THIS IS THE BASE FOR OUR STOCK.
 
+           MOVE 0 TO ERR-CODE OF STOCK
            EVALUATE OP-CODE OF STOCK 
            WHEN 1
                 PERFORM 01-FILL-STOCK
@@ -166,13 +187,10 @@
                       UNTIL CARDS-R-I > 13
                            ADD 1 TO COUNT-OF-CARDS OF STOCK
 
-                           MOVE RANK-N OF CARDS-RANK-T
-                              (CARDS-S-I, CARDS-R-I)
+                           MOVE CARDS-R-I
                               TO RANK-N OF STOCK-T(COUNT-OF-CARDS OF
                               STOCK)
-
-                           MOVE SUIT-N OF CARDS-RANK-T
-                              (CARDS-S-I, CARDS-R-I)
+                           MOVE CARDS-S-I
                               TO SUIT-N OF STOCK-T(COUNT-OF-CARDS OF
                               STOCK)
                    END-PERFORM
@@ -233,15 +251,18 @@
               MOVE 'X' TO TOS-RANK-A 
               MOVE 'X' TO TOS-SUIT-A 
            ELSE
-              MOVE RANK-A OF CARDS-RANK-T(SUIT-N OF
-                 STOCK-T(COUNT-OF-CARDS OF STOCK),
-                 RANK-N OF STOCK-T(COUNT-OF-CARDS OF STOCK))
-                 TO TOS-RANK-A
 
-              MOVE SUIT-A OF CARDS-SUIT-T(SUIT-N OF
-                 STOCK-T(COUNT-OF-CARDS OF STOCK),
-                 RANK-N OF STOCK-T(COUNT-OF-CARDS OF STOCK))
-                 TO TOS-SUIT-A
+      *       THE CARDS KNOW HOW TO MAP THIS
+              MOVE RANK-N OF STOCK-T(COUNT-OF-CARDS OF STOCK)
+                 TO REQ-RANK-N OF CARDS
+              MOVE SUIT-N OF STOCK-T(COUNT-OF-CARDS OF STOCK)
+                 TO REQ-SUIT-N OF CARDS 
+              MOVE 2 TO REQ-OP-CODE OF CARDS
+              CALL 'CARDS' USING GAME
+              END-CALL
+
+              MOVE RSP-RANK-A OF CARDS TO TOS-RANK-A
+              MOVE RSP-SUIT-A OF CARDS TO TOS-SUIT-A
            END-IF.
       
       ******************************************************************
@@ -258,13 +279,11 @@
                       UNTIL CARDS-R-I > 13
                            ADD 1 TO SHADOW-STOCK-I
 
-                           MOVE RANK-N OF CARDS-RANK-T
-                              (CARDS-S-I, CARDS-R-I)
+                           MOVE CARDS-R-I
                               TO SHDW-RANK-N OF
                               SHADOW-STOCK(SHADOW-STOCK-I)
 
-                           MOVE SUIT-N OF CARDS-RANK-T
-                              (CARDS-S-I, CARDS-R-I)
+                           MOVE CARDS-S-I
                               TO SHDW-SUIT-N OF
                               SHADOW-STOCK(SHADOW-STOCK-I)
                    END-PERFORM

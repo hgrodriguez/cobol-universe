@@ -5,7 +5,8 @@ TEST_ALL=testall.exe
 
 all: $(DYNAMIC_LIBS) $(TEST_LIBS) $(TEST_DRIVERS) $(TEST_ALL)
 
-clean: rm -f *.dylib *.exe
+clean:
+	rm -f *.dylib *.exe
 
 # all modules
 cards.dylib: cards.cob

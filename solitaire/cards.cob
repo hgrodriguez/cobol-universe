@@ -8,6 +8,8 @@
       ******************************************************************
       *   DEFINES ALL POSSIBLE RANKS FOR A CARD IN THE GAME
        01 RANKS.
+          02 RANK-MIN              PIC 99 VALUE 1.
+          02 RANK-MAX              PIC 99 VALUE 13.
       *      TABLE OF RANKS IN THE GAME
           02 RANK-T OCCURS 13 TIMES INDEXED BY RANK-I.
       *         THE ALPHA LETTER OF THE RANK
@@ -19,6 +21,8 @@
       *   DEFINES ALL POSSIBLE SUITS FOR A CARD IN THE GAME
        01 SUITS.
       *      TABLE OF SUITS IN THE GAME
+          02 SUIT-MIN              PIC 9  VALUE 1.
+          02 SUIT-MAX              PIC 9  VALUE 4.
           02 SUIT-T OCCURS 4 TIMES INDEXED BY SUIT-I.
       *         THE ALPHA LETTER OF THE SUIT
              03 SUIT-A             PIC X.
@@ -31,9 +35,13 @@
       * CARD DEFINITIONS
       *   DEFINES A CARD FOR THE GAME
        01 CARD.
+      *      CARD RANK PART
           02 C-RANK.
+      *         RANK ALPHA/ASCII CODE
              03 RANK-A             PIC X.
+      *         RANK NUMBER
              03 RANK-N             PIC 99.
+      *      CARD SUIT PART
           02 C-SUIT.
              03 SUIT-A             PIC X.
              03 SUIT-C             PIC X.
@@ -45,8 +53,28 @@
        01 GAME.
       *      DEFINES ALL POSSIBLE CARDS IN THE GAME
           02 CARDS.
+      *      THE REQUEST-RESPONSE-BLOCK
+             03 REQ-RSP-BLOCK.
+      *            THE OPERATION REQUESTED TO BE PERFORMED
+      *            1 = INITIALIZE CARDS
+                04 REQ-OP-CODE     PIC 9.
+      *            RANK NUMBER
+                04 REQ-RANK-N      PIC 99.
+      *            SUIT NUMBER
+                04 REQ-SUIT-N      PIC 9.
+      *            THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
+      *            1 = ILLEGAL OP
+      *            2 = ILLEGAL RANK: LOWER THAN MIN
+      *            3 = ILLEGAL RANK: HIGHER THAN MAX
+      *            4 = ILLEGAL SUIT: LOWER THAN MIN
+      *            5 = ILLEGAL SUIT: HIGHER THAN MAX
+                04 RSP-ERR-CODE    PIC 99.
+      *            RANK ALPHA CODE OF REQUESTED RANK NUMBER
+                04 RSP-RANK-A      PIC X.
+      *            SUIT ALPHA CODE OF REQUESTED SUIT NUMBER
+                04 RSP-SUIT-A      PIC X.
       *         TABLE OF CARDS IN THE GAME
-             04 CARDS-SUIT-T OCCURS 4 TIMES INDEXED BY CARDS-S-I.
+             03 CARDS-SUIT-T OCCURS 4 TIMES INDEXED BY CARDS-S-I.
                 05 CARDS-RANK-T OCCURS 13 TIMES INDEXED BY CARDS-R-I.
                    06 CARD-RANK.
       *                  ALPHA CODE OF RANK:
@@ -145,14 +173,21 @@
 
       ******************************************************************
        PROCEDURE DIVISION USING GAME.
-      *    WE ONLY OFFER ONE THING AND ONE THING ONLY:
-      *    INITIALIZE THE CARDS WITH ALL SUITS AND RANKS.
 
-           PERFORM RANK-T-FILL-ALL.
-
-           PERFORM SUIT-T-FILL-ALL.
-
-           PERFORM CARD-T-FILL-ALL.
+           MOVE 0 TO RSP-ERR-CODE OF CARDS.
+           EVALUATE REQ-OP-CODE OF CARDS
+           WHEN 1
+      *         INITIALIZE THE CARDS WITH ALL SUITS AND RANKS.
+                PERFORM RANK-T-FILL-ALL
+                PERFORM SUIT-T-FILL-ALL
+                PERFORM CARD-T-FILL-ALL
+           WHEN 2
+      *         RESPOND BACK WITH THE RANK-A/SUIT-A
+                PERFORM 02-RESPOND-RANK-SUIT
+           WHEN OTHER
+      *         ILLEGAL OP-CODE
+                MOVE 1 TO RSP-ERR-CODE OF CARDS
+           END-EVALUATE
 
            GOBACK.
 
@@ -237,26 +272,44 @@
       *    RUN THROUGH ALL SUITS
            PERFORM VARYING SUIT-I
               FROM 1 BY 1
-              UNTIL SUIT-I > 4
+              UNTIL SUIT-I > SUIT-MAX
       *            MOVE ALL DATA OF CURRENT SUIT TO CARD
-                   MOVE SUIT-A OF SUITS(SUIT-I)
-                      TO SUIT-A OF C-SUIT
-                   MOVE SUIT-C OF SUITS(SUIT-I)
-                      TO SUIT-C OF C-SUIT
-                   MOVE SUIT-N OF SUITS(SUIT-I)
-                      TO SUIT-N OF C-SUIT
+                   MOVE SUIT-T(SUIT-I) TO C-SUIT
 
       *            RUN THROUGH ALL RANKS
                    PERFORM VARYING RANK-I
                       FROM 1 BY 1
-                      UNTIL RANK-I > 13
+                      UNTIL RANK-I > RANK-MAX
 
       *                    MOVE ALL DATA OF CURRENT RANK TO CARD
-                           MOVE RANK-A OF RANKS(RANK-I)
-                              TO RANK-A OF C-RANK
-                           MOVE RANK-N OF RANKS(RANK-I)
-                              TO RANK-N OF C-RANK
+                           MOVE RANK-T(RANK-I) TO C-RANK
+
       *                    HERE WE HAVE ALL DATA MOVED, NOW MOVE CARD
                            MOVE CARD TO CARDS-RANK-T(SUIT-I, RANK-I)
                    END-PERFORM
            END-PERFORM.
+
+      ******************************************************************
+       02-RESPOND-RANK-SUIT.
+           IF REQ-RANK-N IS LESS THAN RANK-MIN
+              MOVE 2 TO RSP-ERR-CODE OF CARDS
+              GOBACK
+           END-IF
+
+           IF REQ-RANK-N IS GREATER THAN RANK-MAX
+              MOVE 3 TO RSP-ERR-CODE OF CARDS
+              GOBACK
+           END-IF
+
+           IF REQ-SUIT-N IS LESS THAN SUIT-MIN
+              MOVE 4 TO RSP-ERR-CODE OF CARDS
+              GOBACK
+           END-IF
+
+           IF REQ-SUIT-N IS GREATER THAN SUIT-MAX
+              MOVE 5 TO RSP-ERR-CODE OF CARDS
+              GOBACK
+           END-IF
+
+           MOVE RANK-A OF RANK-T(REQ-RANK-N OF CARDS) TO RSP-RANK-A.
+           MOVE SUIT-A OF SUIT-T(REQ-SUIT-N OF CARDS) TO RSP-SUIT-A.
