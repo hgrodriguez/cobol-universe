@@ -28,7 +28,7 @@ testcards.exe: testcards.cob
 testfoundation.exe: testfoundation.cob
 	cobc -x -o testfoundation.exe $<
 
-teststock.exe: teststock.cob
+teststock.exe: teststock.cob stock.dylib cards.dylib
 	cobc -x -o teststock.exe $<
 
 testtableau.exe: testtableau.cob

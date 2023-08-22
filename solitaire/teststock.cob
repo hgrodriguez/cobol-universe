@@ -5,149 +5,75 @@
 
        WORKING-STORAGE SECTION.
 
-       01 EXPECTED-RANK-A           PIC X.
-       01 EXPECTED-SUIT-A           PIC X.
-
       ******************************************************************
-      *   THE GAME OVERALL.
-       01 GAME.
-      *      DEFINES ALL POSSIBLE CARDS IN THE GAME
-          02 CARDS.
+      * VARIABLES FOR THE TEST RUN
+       01 CARDS-S-I               PIC 9.
+       01 CARDS-R-I               PIC 99.
+       01 EXPECTED-RANK-A         PIC X.
+       01 EXPECTED-SUIT-A         PIC X.
+       01 T-I-P                   PIC 9.
+       01 T-RANK-N                PIC 99.
+       01 T-SUIT-N                PIC 9.
+       01 T-COUNTER               PIC 99.
+       01 TESTS-RUN               PIC 999 VALUE 0.
+       01 TESTS-OK                PIC 999 VALUE 0.
+       01 TESTS-NOK               PIC 999 VALUE 0.
+       01 TESTS-RANK              PIC 999 VALUE 1.
+       01 T-COUNTER-CHECK         PIC 99.
+      *   THIS IS THE CARDS UNIVERSE TO TEST THE RANDOMIZED STACK
+       01 T-CARDS.
+          04 T-CARDS-SUIT-T OCCURS 4 TIMES INDEXED BY T-CARDS-S-I.
+             05 T-CARDS-RANK-T OCCURS 13 TIMES INDEXED BY T-CARDS-R-I.
+      *            IS PRESENT: 0=NO, 1=YES
+                07 T-CARDS-I-P    PIC 9.
+
+       01 CARDS.
       *      THE REQUES-RESPONSE-BLOCK
-             03 REQ-RSP-BLOCK.
+          03 REQ-RSP-BLOCK.
       *            THE OPERATION REQUESTED TO BE PERFORMED
       *            1 = INITIALIZE CARDS
-                04 REQ-OP-CODE      PIC 9.
+             04 REQ-OP-CODE       PIC 9.
       *            RANK NUMBER
-                04 REQ-RANK-N       PIC 99.
+             04 REQ-RANK-N        PIC 99.
       *            SUIT NUMBER
-                04 REQ-SUIT-N       PIC 9.
+             04 REQ-SUIT-N        PIC 9.
       *            THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
       *            1 = ILLEGAL OP
       *            2 = ILLEGAL RANK: LOWER THAN MIN
       *            3 = ILLEGAL RANK: HIGHER THAN MAX
       *            4 = ILLEGAL SUIT: LOWER THAN MIN
       *            5 = ILLEGAL SUIT: HIGHER THAN MAX
-                04 RSP-ERR-CODE     PIC 99.
+             04 RSP-ERR-CODE      PIC 99.
       *            RANK ALPHA CODE OF REQUESTED RANK NUMBER
-                04 RSP-RANK-A       PIC X.
+             04 RSP-RANK-A        PIC X.
       *            SUIT ALPHA CODE OF REQUESTED SUIT NUMBER
-                04 RSP-SUIT-A       PIC X.
-      *         TABLE OF CARDS IN THE GAME
-                04 CARDS-SUIT-T OCCURS 4 TIMES INDEXED BY CARDS-S-I.
-                   05 CARDS-RANK-T OCCURS 13 TIMES INDEXED BY CARDS-R-I.
-                      06 CARD-RANK.
-      *                  ALPHA CODE OF RANK:
-      *                  A,2,3,4,5,6,7,8,9,T,J,Q,K             
-                         07 RANK-A  PIC X.
-      *                  NUMBER CODE OF RANK:
-      *                  1 - 13
-                         07 RANK-N  PIC 99.
-                      06 CARD-SUIT.
-      *                  ALPHA CODE OF SUIT:
-      *                  D(IAMONDS),C(LUB),H(EARTS),S(PADES)
-                         07 SUIT-A  PIC X.
-      *                  COLOR OF SUIT:
-      *                  R(ED), B(LACK)
-                         07 SUIT-C  PIC X.
-      *                  NUMBER CODE OF SUIT:
-      *                  1 - 4
-                         07 SUIT-N  PIC 9.
-      *      DEFINES ALL FOUNDATION STACKS OF THE GAME
-          02 FOUNDATION.
-      *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
-             05 OP-CODE             PIC 9.
-      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-             05 ERR-CODE            PIC 9.
-      *      THE SUIT OF THE CARD TO PUSH ONTO THE FOUNDATION
-      *          INTO THE STACK WITH NUMBER SUIT-TO-PUSH.
-             05 SUIT-TO-PUSH        PIC 9.
-      *          THE FOUNDATION HAS FOUR STACKS TO MAINTAIN
-      *          THE INDEX INTO THE SPECIFIC STACK IS DEFINED BY THE
-      *          SUIT NUMBER, AS WE HAVE FOUR SUITS
-             05 F-STACKS-T OCCURS 4 TIMES INDEXED BY F-STACK-I.
-      *            HOW MANY CARDS ARE IN THE STACK.
-                10 COUNT-OF-CARDS   PIC 99  VALUE 0.
-      *            NEXT ACCEPTABLE RANK
-      *            ALWAYS COUNT-OF-CARDS + 1
-                10 NEXT-RANK        PIC 99  VALUE 1.
-      *            SIGNAL, IF THE STACK IS FULL
-                10 IS-FULL          PIC X.
-      *            ALPHA CODE OF RANK OF TOP CARD:
-      *            A,2,3,4,5,6,7,8,9,T,J,Q,K             
-                10 RANK-A           PIC X.
-      *            ALPHA CODE OF SUIT OF TOP CARD:
-      *            D(IAMONDS),C(LUB),H(EARTS),S(PADES)
-                10 SUIT-A           PIC X.
+             04 RSP-SUIT-A        PIC X.
+
+      ******************************************************************
       *      DEFINES THE STOCK OF THE GAME
-          02 STOCK.
+       01 STOCK.
+          03 REQ-RSP-BLOCK.
       *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
-             03 OP-CODE             PIC 9.
+             04 REQ-OP-CODE       PIC 99.
       *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-             03 ERR-CODE            PIC 9.
+             04 RSP-ERR-CODE      PIC 9.
       *      THE CARD FETCHED FROM THE STOCK
-             03 CARD-FETCHED.
-                26 RANK-N           PIC 99.
-                26 SUIT-N           PIC 9.
+             04 RSP-CARD-FETCHED.
+                05 RSP-RANK-N     PIC 99.
+                05 RSP-SUIT-N     PIC 9.
       *         TOP OF STOCK PRINT REPRESENTATION
-             03 TOS-PEEK            PIC 9.
-             03 TOS-RANK-A          PIC X.
-             03 TOS-SUIT-A          PIC X.
+             04 RSP-TOS-PEEK      PIC 9.
+             04 RSP-TOS-RANK-A    PIC X.
+             04 RSP-TOS-SUIT-A    PIC X.
       *      HOW MANY CARDS ARE IN THE STOCK.
       *      IN THE INITIALIZATION PHASE, THIS COUNTER GOES UP,
       *        AS IT COUNTS THE CARDS TRANFERRED INTO THE STOCK
       *      THE STOCK SHRINKS OVER TIME, WHEN WE FETCH CARDS
-             03 COUNT-OF-CARDS      PIC 99.
+          03 COUNT-OF-CARDS       PIC 99.
       *      TABLE OF CARDS IN THE STOCK
-             03 STOCK-T OCCURS 52 TIMES INDEXED BY STOCK-I.
-                06 RANK-N           PIC 99.
-                06 SUIT-N           PIC 9.      
-      *      DEFINES ALL TABLEAU STACKS OF THE GAME
-          02 TABLEAU.
-      *      THE OPERATION REQUESTED TO BE PERFORMED ON THE TABLEAU
-             05 OP-CODE             PIC 9.
-      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-             05 ERR-CODE            PIC 9.
-      *         THE STACK-INDEX IN SCOPE FOR THE REQUESTED OPERATION
-             05 STACK-I-IN-SCOPE    PIC 99.
-      *         THE CARD IN SCOPE FOR THE REQUESTED OPERATION
-             05 CARD-IN-SCOPE.
-                26 RANK-N           PIC 99.
-                26 SUIT-N           PIC 9.
-      *         DATA WE NEED FOR MOVING CARDS IN THE TABLEAU
-      *         SOURCE STACK INDEX
-             05 MV-SRC-ST-I         PIC 9.
-      *         SOURCE CARD INDEX IN THE SOURCE STACK INDEX
-             05 MV-SRC-CA-I         PIC 99.
-      *         DESTINATION STACK INDEX
-             05 MV-DST-ST-I         PIC 9.
-      *         HOW MANY CARDS ARE IN THE TABLEAU.
-             05 T-COUNT-OF-CARDS    PIC 99.
-             05 T-STACKS-T OCCURS 7 TIMES INDEXED BY T-STACK-I.
-      *            HOW MANY CARDS ARE IN THE STACK.
-                10 COUNT-OF-CARDS   PIC 99  VALUE 0.
-      *            THE CARDS IN ONE STACK
-                10 CARDS-T OCCURS 52 TIMES INDEXED BY CARDS-T-I.
-                   26 RANK-N        PIC 99.
-                   26 SUIT-N        PIC 9.
-
-      ******************************************************************
-      * VARIABLES FOR THE TEST RUN
-       01 T-I-P                     PIC 9.
-       01 T-RANK-N                  PIC 99.
-       01 T-SUIT-N                  PIC 9.
-       01 T-COUNTER                 PIC 99.
-       01 TESTS-RUN                 PIC 999 VALUE 0.
-       01 TESTS-OK                  PIC 999 VALUE 0.
-       01 TESTS-NOK                 PIC 999 VALUE 0.
-       01 TESTS-RANK                PIC 999 VALUE 1.
-       01 T-COUNTER-CHECK           PIC 99.
-      *   THIS IS THE CARDS UNIVERSE TO TEST THE RANDOMIZED STACK
-       01 T-CARDS.
-          04 T-CARDS-SUIT-T OCCURS 4 TIMES INDEXED BY T-CARDS-S-I.
-             05 T-CARDS-RANK-T OCCURS 13 TIMES INDEXED BY T-CARDS-R-I.
-      *            IS PRESENT: 0=NO, 1=YES
-                07 T-CARDS-I-P      PIC 9.
+          03 STOCK-T OCCURS 52 TIMES INDEXED BY STOCK-I.
+             06 RANK-N            PIC 99.
+             06 SUIT-N            PIC 9.      
 
       ******************************************************************
        PROCEDURE DIVISION.
@@ -195,17 +121,17 @@
 
       ******************************************************************
        01-TEST-FILL-STOCK.
-           MOVE 1 TO OP-CODE OF STOCK.
-           CALL 'STOCK' USING GAME
+           MOVE 1 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
            END-CALL.           
 
            ADD 1 TO TESTS-RUN
-           IF TOS-PEEK IS EQUAL TO 0
+           IF RSP-TOS-PEEK IS EQUAL TO 0
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "01-TEST-FILL-STOCK:" WITH NO ADVANCING 
-              DISPLAY "TOS-PEEK=" TOS-PEEK WITH NO ADVANCING 
+              DISPLAY "TOS-PEEK=" RSP-TOS-PEEK WITH NO ADVANCING 
               DISPLAY " <> 0"
            END-IF
 
@@ -271,8 +197,8 @@
        02-TEST-RANDOMIZE-STOCK.
            PERFORM 02-INIT-TEST-CARD-DATA-SET.
 
-           MOVE 2 TO OP-CODE OF STOCK.
-           CALL 'STOCK' USING GAME
+           MOVE 2 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
            END-CALL.           
 
       *    NOW WE NEED TO TEST THE RANDOMIZED DATA
@@ -317,8 +243,8 @@
 
       ******************************************************************
        03-FETCH-1-FROM-STOCK.
-           MOVE 3 TO OP-CODE OF STOCK
-           CALL 'STOCK' USING GAME
+           MOVE 3 TO REQ-OP-CODE OF STOCK
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
            END-CALL
 
            MOVE 52 TO T-COUNTER-CHECK
@@ -337,14 +263,14 @@
            END-IF.
 
            ADD 1 TO TESTS-RUN
-           IF CARD-FETCHED OF STOCK IS EQUAL TO STOCK-T(52)
+           IF RSP-CARD-FETCHED OF STOCK IS EQUAL TO STOCK-T(52)
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "03-FETCH-1-FROM-STOCK"
               DISPLAY "CARD-FETCHED=" WITH NO
                  ADVANCING 
-              DISPLAY CARD-FETCHED OF STOCK WITH NO ADVANCING 
+              DISPLAY RSP-CARD-FETCHED OF STOCK WITH NO ADVANCING 
               DISPLAY " <> STOCK-T(52)=" WITH NO ADVANCING 
               DISPLAY STOCK-T(52)
            END-IF.
@@ -356,8 +282,8 @@
               FROM 1 BY 1
               UNTIL T-COUNTER IS GREATER THAN 52
            
-                   MOVE 3 TO OP-CODE OF STOCK
-                   CALL 'STOCK' USING GAME
+                   MOVE 3 TO REQ-OP-CODE OF STOCK
+                   CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
                    END-CALL
 
            END-PERFORM.
@@ -375,14 +301,14 @@
            END-IF.
 
            ADD 1 TO TESTS-RUN
-           IF ERR-CODE OF STOCK IS EQUAL TO 0
+           IF RSP-ERR-CODE OF STOCK IS EQUAL TO 0
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "04-FETCH-ALL-FROM-STOCK"
               DISPLAY "ERR-CODE OF STOCK=" WITH NO
                  ADVANCING 
-              DISPLAY ERR-CODE OF STOCK WITH NO ADVANCING 
+              DISPLAY RSP-ERR-CODE OF STOCK WITH NO ADVANCING 
               DISPLAY " <> 0"
            END-IF.
 
@@ -392,8 +318,8 @@
               FROM 1 BY 1
               UNTIL T-COUNTER IS GREATER THAN 53
            
-                   MOVE 3 TO OP-CODE OF STOCK
-                   CALL 'STOCK' USING GAME
+                   MOVE 3 TO REQ-OP-CODE OF STOCK
+                   CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
                    END-CALL
 
            END-PERFORM.
@@ -411,15 +337,15 @@
            END-IF.
 
            ADD 1 TO TESTS-RUN
-           IF ERR-CODE OF STOCK IS EQUAL TO 1
+           IF RSP-ERR-CODE OF STOCK IS EQUAL TO 2
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "05-FETCH-1-2-MANY-FROM-STOCK:" WITH NO ADVANCING 
               DISPLAY "ERR-CODE OF STOCK=" WITH NO
                  ADVANCING 
-              DISPLAY ERR-CODE OF STOCK WITH NO ADVANCING 
-              DISPLAY " <> 1"
+              DISPLAY RSP-ERR-CODE OF STOCK WITH NO ADVANCING 
+              DISPLAY " <> 2"
            END-IF.
 
       ******************************************************************
@@ -428,8 +354,8 @@
               FROM 1 BY 1
               UNTIL T-COUNTER IS GREATER THAN 28
            
-                   MOVE 3 TO OP-CODE OF STOCK
-                   CALL 'STOCK' USING GAME
+                   MOVE 3 TO REQ-OP-CODE OF STOCK
+                   CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
                    END-CALL
 
            END-PERFORM.
@@ -451,48 +377,48 @@
       ******************************************************************
        20-TOGGLE-PEEK.
            ADD 1 TO TESTS-RUN
-           IF TOS-PEEK IS EQUAL TO 0
+           IF RSP-TOS-PEEK IS EQUAL TO 0
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "20-TOGGLE-PEEK:" WITH NO ADVANCING 
-              DISPLAY "TOS-PEEK=" TOS-PEEK WITH NO ADVANCING 
+              DISPLAY "TOS-PEEK=" RSP-TOS-PEEK WITH NO ADVANCING 
               DISPLAY " <> 0"
            END-IF
-           MOVE 4 TO OP-CODE OF STOCK.
-           CALL 'STOCK' USING GAME
+           MOVE 4 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
            END-CALL
            ADD 1 TO TESTS-RUN
-           IF TOS-PEEK IS EQUAL TO 1
+           IF RSP-TOS-PEEK IS EQUAL TO 1
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "20-TOGGLE-PEEK:" WITH NO ADVANCING 
-              DISPLAY "TOS-PEEK=" TOS-PEEK WITH NO ADVANCING 
+              DISPLAY "TOS-PEEK=" RSP-TOS-PEEK WITH NO ADVANCING 
               DISPLAY " <> 1"
            END-IF.
 
       ******************************************************************
        21-PRINT-NO-PEEK.
-           MOVE 5 TO OP-CODE OF STOCK.
-           CALL 'STOCK' USING GAME
+           MOVE 5 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
            END-CALL
            ADD 1 TO TESTS-RUN
-           IF TOS-RANK-A IS EQUAL TO 'X'
+           IF RSP-TOS-RANK-A IS EQUAL TO 'X'
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
-              DISPLAY "TOS-RANK-A=" TOS-RANK-A WITH NO ADVANCING 
+              DISPLAY "TOS-RANK-A=" RSP-TOS-RANK-A WITH NO ADVANCING 
               DISPLAY " <> X"
            END-IF.
            ADD 1 TO TESTS-RUN
-           IF TOS-SUIT-A IS EQUAL TO 'X'
+           IF RSP-TOS-SUIT-A IS EQUAL TO 'X'
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
-              DISPLAY "TOS-SUIT-A=" TOS-SUIT-A WITH NO ADVANCING 
+              DISPLAY "TOS-SUIT-A=" RSP-TOS-SUIT-A WITH NO ADVANCING 
               DISPLAY " <> X"
            END-IF.
 
@@ -502,35 +428,35 @@
            MOVE RANK-N OF STOCK-T(52) TO REQ-RANK-N OF CARDS
            MOVE SUIT-N OF STOCK-T(52) TO REQ-SUIT-N OF CARDS 
            MOVE 2 TO REQ-OP-CODE OF CARDS
-           CALL 'CARDS' USING GAME
+           CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS
            END-CALL
 
            MOVE RSP-RANK-A OF CARDS TO EXPECTED-RANK-A
            MOVE RSP-SUIT-A OF CARDS TO EXPECTED-SUIT-A
 
-           MOVE 4 TO OP-CODE OF STOCK.
-           CALL 'STOCK' USING GAME
+           MOVE 4 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
            END-CALL
 
-           MOVE 5 TO OP-CODE OF STOCK.
-           CALL 'STOCK' USING GAME
+           MOVE 5 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
            END-CALL
            ADD 1 TO TESTS-RUN
-           IF TOS-RANK-A IS EQUAL TO EXPECTED-RANK-A
+           IF RSP-TOS-RANK-A IS EQUAL TO EXPECTED-RANK-A
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "22-PRINT-PEEK:" WITH NO ADVANCING 
-              DISPLAY "TOS-RANK-A=" TOS-RANK-A WITH NO ADVANCING 
+              DISPLAY "TOS-RANK-A=" RSP-TOS-RANK-A WITH NO ADVANCING 
               DISPLAY " <> " EXPECTED-RANK-A
            END-IF.
            ADD 1 TO TESTS-RUN
-           IF TOS-SUIT-A IS EQUAL TO EXPECTED-SUIT-A
+           IF RSP-TOS-SUIT-A IS EQUAL TO EXPECTED-SUIT-A
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "22-PRINT-PEEK:" WITH NO ADVANCING 
-              DISPLAY "TOS-SUIT-A=" TOS-SUIT-A WITH NO ADVANCING 
+              DISPLAY "TOS-SUIT-A=" RSP-TOS-SUIT-A WITH NO ADVANCING 
               DISPLAY " <> " EXPECTED-SUIT-A
            END-IF.
 
@@ -539,65 +465,65 @@
            PERFORM VARYING T-COUNTER
               FROM 1 BY 1
               UNTIL T-COUNTER IS GREATER THAN 53
-                   MOVE 3 TO OP-CODE OF STOCK
-                   CALL 'STOCK' USING GAME
+                   MOVE 3 TO REQ-OP-CODE OF STOCK
+                   CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
                    END-CALL
            END-PERFORM.
 
-           MOVE 5 TO OP-CODE OF STOCK.
-           CALL 'STOCK' USING GAME
+           MOVE 5 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
            END-CALL
            ADD 1 TO TESTS-RUN
-           IF TOS-RANK-A IS EQUAL TO 'X'
+           IF RSP-TOS-RANK-A IS EQUAL TO 'X'
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
-              DISPLAY "TOS-RANK-A=" TOS-RANK-A WITH NO ADVANCING 
+              DISPLAY "TOS-RANK-A=" RSP-TOS-RANK-A WITH NO ADVANCING 
               DISPLAY " <> X"
            END-IF.
            ADD 1 TO TESTS-RUN
-           IF TOS-SUIT-A IS EQUAL TO 'X'
+           IF RSP-TOS-SUIT-A IS EQUAL TO 'X'
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
-              DISPLAY "TOS-SUIT-A=" TOS-SUIT-A WITH NO ADVANCING 
+              DISPLAY "TOS-SUIT-A=" RSP-TOS-SUIT-A WITH NO ADVANCING 
               DISPLAY " <> X"
            END-IF.
 
-           MOVE 4 TO OP-CODE OF STOCK.
-           CALL 'STOCK' USING GAME
+           MOVE 4 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
            END-CALL
-           MOVE 5 TO OP-CODE OF STOCK.
-           CALL 'STOCK' USING GAME
+           MOVE 5 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
            END-CALL
            ADD 1 TO TESTS-RUN
-           IF TOS-RANK-A IS EQUAL TO 'X'
+           IF RSP-TOS-RANK-A IS EQUAL TO 'X'
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
-              DISPLAY "TOS-RANK-A=" TOS-RANK-A WITH NO ADVANCING 
+              DISPLAY "TOS-RANK-A=" RSP-TOS-RANK-A WITH NO ADVANCING 
               DISPLAY " <> X"
            END-IF.
            ADD 1 TO TESTS-RUN
-           IF TOS-SUIT-A IS EQUAL TO 'X'
+           IF RSP-TOS-SUIT-A IS EQUAL TO 'X'
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
-              DISPLAY "TOS-SUIT-A=" TOS-SUIT-A WITH NO ADVANCING 
+              DISPLAY "TOS-SUIT-A=" RSP-TOS-SUIT-A WITH NO ADVANCING 
               DISPLAY " <> X"
            END-IF.
 
       ******************************************************************
        01-STOCK-RESET.
            MOVE 1 TO REQ-OP-CODE OF CARDS
-           CALL 'CARDS' USING GAME
+           CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS
            END-CALL.
-           MOVE 1 TO OP-CODE OF STOCK.
-           CALL 'STOCK' USING GAME
+           MOVE 1 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
            END-CALL.           
 
       ******************************************************************
