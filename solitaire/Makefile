@@ -25,7 +25,7 @@ tableau.dylib: tableau.cob
 testcards.exe: testcards.cob
 	cobc -x -o testcards.exe $<
 
-testfoundation.exe: testfoundation.cob
+testfoundation.exe: testfoundation.cob foundation.dylib cards.dylib
 	cobc -x -o testfoundation.exe $<
 
 teststock.exe: teststock.cob stock.dylib cards.dylib
