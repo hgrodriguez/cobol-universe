@@ -31,7 +31,7 @@ testfoundation.exe: testfoundation.cob foundation.dylib cards.dylib
 teststock.exe: teststock.cob stock.dylib cards.dylib
 	cobc -x -o teststock.exe $<
 
-testtableau.exe: testtableau.cob
+testtableau.exe: testtableau.cob tableau.dylib stock.dylib cards.dylib
 	cobc -x -o testtableau.exe $<
 
 # all single drivers as dylibs
