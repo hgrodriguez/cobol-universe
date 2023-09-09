@@ -3,7 +3,7 @@ TEST_LIBS=testcards.dylib testfoundation.dylib teststock.dylib testtableau.dylib
 TEST_DRIVERS=testcards.exe testfoundation.exe teststock.exe testtableau.exe
 TEST_ALL=testall.exe
 
-all: $(DYNAMIC_LIBS) $(TEST_LIBS) $(TEST_DRIVERS) $(TEST_ALL)
+all: $(DYNAMIC_LIBS) $(TEST_LIBS) $(TEST_DRIVERS) $(TEST_ALL) solitaire.exe
 
 clean:
 	rm -f *.dylib *.exe
@@ -51,3 +51,10 @@ testtableau.dylib: testtableau.cob
 testall.exe: testall.cob
 	cobc -x -o testall.exe testall.cob
 
+###################################
+menus.dylib: menus.cob
+	cobc -m $<
+
+# main program solitaire
+solitaire.exe: solitaire.cob menus.dylib $(DYNAMIC_LIBS)
+	cobc -x -o solitaire.exe $<

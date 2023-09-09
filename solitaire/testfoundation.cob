@@ -13,6 +13,8 @@
        01 TESTS-OK                PIC 999 VALUE 0.
        01 TESTS-NOK               PIC 999 VALUE 0.
        01 TESTS-RANK              PIC 99  VALUE 1.
+       01 TESTS-NEXT-RANK         PIC 99  VALUE 2.
+       01 T-STACK-I               PIC 9.
 
       ******************************************************************
       * CARD DEFINITIONS
@@ -54,35 +56,45 @@
        01 FOUNDATION.
           03 REQ-RSP-BLOCK.
       *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
-             04 REQ-OP-CODE       PIC 9.
+      *      01 -> RESET
+      *      02 -> PUSH-1-CARD
+      *      03 -> RETURN NUMBER OF CARDS IN STACK
+      *      04 -> RETURN NEXT RANK IN STACK
+      *      05 -> RETURN THE FULL STATUS OF STACK
+      *      06 -> RETURN RANK-A OF STACK
+      *      07 -> RETURN SUIT-A OF STACK
+      *      99 -> PRINT
+             04 REQ-OP-CODE       PIC 99.
       *      THE SUIT OF THE CARD TO PUSH ONTO THE FOUNDATION
       *          INTO THE STACK WITH NUMBER SUIT-TO-PUSH.
              04 REQ-SUIT-TO-PUSH  PIC 9.
+      *         THE STACK NUMBER FOR THE REQUEST
+             04 REQ-STACK-NUM     PIC 9.
       *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-             04 RSP-ERR-CODE      PIC 9.
-      *          THE FOUNDATION HAS FOUR STACKS TO MAINTAIN
-      *          THE INDEX INTO THE SPECIFIC STACK IS DEFINED BY THE
-      *          SUIT NUMBER, AS WE HAVE FOUR SUITS
-          03 F-STACKS-T OCCURS 4 TIMES INDEXED BY F-STACK-I.
-      *            HOW MANY CARDS ARE IN THE STACK.
-             04 COUNT-OF-CARDS    PIC 99  VALUE 0.
-      *            NEXT ACCEPTABLE RANK
-      *            ALWAYS COUNT-OF-CARDS + 1
-             04 NEXT-RANK         PIC 99  VALUE 1.
-      *            SIGNAL, IF THE STACK IS FULL
-             04 IS-FULL           PIC X.
-      *            ALPHA CODE OF RANK OF TOP CARD:
-      *            A,2,3,4,5,6,7,8,9,T,J,Q,K             
-             04 RANK-A            PIC X.
-      *            ALPHA CODE OF SUIT OF TOP CARD:
-      *            D(IAMONDS),C(LUB),H(EARTS),S(PADES)
-             04 SUIT-A            PIC X.
+             04 RSP-ERR-CODE      PIC 99.
+      *         RESPONSE FOR COUNT OF CARDS IN STACK REQUESTED
+             04 RSP-CNT-STACK     PIC 99.
+      *         RESPONSE FOR NEXT RANK IN STACK REQUESTED
+             04 RSP-NXT-RANK      PIC 99.
+      *         RESPONSE FOR IS FULL STATE OF STACK REQUESTED
+             04 RSP-IS-FULL       PIC X.
+      *         RESPONSE OF ALPHA CODE OF RANK OF TOP CARD OF STACK
+      *         REQUESTED
+             04 RSP-RANK-A        PIC X.
+      *         RESPONSE OF ALPHA CODE OF SUIT OF TOP CARD OF STACK
+      *         REQUESTED
+             04 RSP-SUIT-A        PIC X.
 
       ******************************************************************
        PROCEDURE DIVISION.
            DISPLAY "TESTFOUNDATION"           
 
            PERFORM 01-TEST-RESET.
+
+           MOVE 9 TO REQ-OP-CODE OF FOUNDATION.
+           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+           END-CALL.
+           DISPLAY ' '
 
            PERFORM VARYING REQ-SUIT-TO-PUSH
               FROM 1 BY 1
@@ -95,6 +107,8 @@
               UNTIL REQ-SUIT-TO-PUSH > 4
                    PERFORM 03-TEST-SUIT-PUSH-1-TO-MANY
            END-PERFORM
+
+           PERFORM 04-ILLEGAL-OP-CODES.
 
            PERFORM 10-TEST-PICS-OF-TOP-CARD.
 
@@ -114,56 +128,98 @@
               DISPLAY "FAILED: 01-TEST-RESET: ERR-CODE <> 0"
            END-IF.
 
-           PERFORM VARYING F-STACK-I
+           PERFORM VARYING T-STACK-I
               FROM 1 BY 1
-              UNTIL F-STACK-I > 4
+              UNTIL T-STACK-I > 4
+      *            CHECK NUMBER OF CARDS IN STACK
+                   MOVE 3 TO REQ-OP-CODE OF FOUNDATION
+                   MOVE T-STACK-I TO REQ-STACK-NUM
+                   CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+                   END-CALL
                    ADD 1 TO TESTS-RUN
-                   IF COUNT-OF-CARDS OF F-STACKS-T(F-STACK-I)
+                   IF RSP-CNT-STACK OF FOUNDATION
                       IS EQUAL TO 0
                       ADD 1 TO TESTS-OK
                    ELSE
                       ADD 1 TO TESTS-NOK
-                      DISPLAY COUNT-OF-CARDS OF F-STACKS-T(F-STACK-I)
+                      DISPLAY "FAILED: 01-TEST-RESET: RSP-CNT-STACK = "
+                         WITH NO ADVANCING
+                      DISPLAY RSP-CNT-STACK " <> 0"
                    END-IF
 
+      *            CHECK NEXT RANK IN STACK
+                   MOVE 4 TO REQ-OP-CODE OF FOUNDATION
+                   MOVE T-STACK-I TO REQ-STACK-NUM
+                   CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+                   END-CALL
                    ADD 1 TO TESTS-RUN
-                   IF NEXT-RANK OF F-STACKS-T(F-STACK-I) IS EQUAL TO 1
+                   IF RSP-NXT-RANK OF FOUNDATION IS EQUAL TO 1
                       ADD 1 TO TESTS-OK
                    ELSE
                       ADD 1 TO TESTS-NOK
-                      DISPLAY NEXT-RANK OF F-STACKS-T(F-STACK-I)
+                      DISPLAY "FAILED: 01-TEST-RESET: RSP-NXT-RANK ="
+                         WITH NO ADVANCING 
+                      DISPLAY RSP-NXT-RANK OF FOUNDATION " <> 1"
                    END-IF
 
+      *            CHECK IS FULL STATE OF STACK
+                   MOVE 5 TO REQ-OP-CODE OF FOUNDATION
+                   MOVE T-STACK-I TO REQ-STACK-NUM
+                   CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+                   END-CALL
                    ADD 1 TO TESTS-RUN
-                   IF IS-FULL OF F-STACKS-T(F-STACK-I) IS EQUAL TO 'N'
+                   IF RSP-IS-FULL OF FOUNDATION IS EQUAL TO 'N'
                       ADD 1 TO TESTS-OK
                    ELSE
                       ADD 1 TO TESTS-NOK
-                      DISPLAY IS-FULL OF F-STACKS-T(F-STACK-I)
+                      DISPLAY "FAILED: 01-TEST-RESET: RSP-IS-FULL ="
+                         WITH NO ADVANCING 
+                      DISPLAY RSP-IS-FULL OF FOUNDATION
+                         WITH NO ADVANCING 
+                      DISPLAY " <> N"
                    END-IF
 
+      *            CHECK RANK-A OF STACK
+                   MOVE 6 TO REQ-OP-CODE OF FOUNDATION
+                   MOVE T-STACK-I TO REQ-STACK-NUM
+                   CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+                   END-CALL
                    ADD 1 TO TESTS-RUN
-                   IF RANK-A OF F-STACKS-T(F-STACK-I) IS EQUAL TO 'X'
+                   IF RSP-RANK-A OF FOUNDATION IS EQUAL TO 'X'
                       ADD 1 TO TESTS-OK
                    ELSE
                       ADD 1 TO TESTS-NOK
-                      DISPLAY RANK-A OF F-STACKS-T(F-STACK-I)
+                      DISPLAY "FAILED: 01-TEST-RESET: RSP-RANK-A ="
+                         WITH NO ADVANCING 
+                      DISPLAY RSP-RANK-A OF FOUNDATION
+                         WITH NO ADVANCING 
+                      DISPLAY " <> X"
                    END-IF
 
+      *            CHECK SUIT-A OF STACK
+                   MOVE 7 TO REQ-OP-CODE OF FOUNDATION
+                   MOVE T-STACK-I TO REQ-STACK-NUM
+                   CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+                   END-CALL
                    ADD 1 TO TESTS-RUN
-                   IF SUIT-A OF F-STACKS-T(F-STACK-I) IS EQUAL TO 'X'
+                   IF RSP-SUIT-A OF FOUNDATION IS EQUAL TO 'X'
                       ADD 1 TO TESTS-OK
                    ELSE
                       ADD 1 TO TESTS-NOK
-                      DISPLAY SUIT-A OF F-STACKS-T(F-STACK-I)
+                      DISPLAY "FAILED: 01-TEST-RESET: RSP-RANK-A ="
+                         WITH NO ADVANCING 
+                      DISPLAY RSP-SUIT-A OF FOUNDATION
+                         WITH NO ADVANCING 
+                      DISPLAY " <> X"
                    END-IF
+
            END-PERFORM.
 
       ******************************************************************
        02-TEST-SUIT-PUSH-ALL-OK.
            PERFORM 01-FOUNDATION-RESET.
 
-           MOVE REQ-SUIT-TO-PUSH TO F-STACK-I.
+           MOVE REQ-SUIT-TO-PUSH TO T-STACK-I.
 
            PERFORM VARYING TESTS-RANK
               FROM 1 BY 1
@@ -182,48 +238,94 @@
                       DISPLAY ": ERR-CODE <> 0"
                    END-IF
 
+      *            CHECK NUMBER OF CARDS IN STACK
+                   MOVE 3 TO REQ-OP-CODE OF FOUNDATION
+                   MOVE T-STACK-I TO REQ-STACK-NUM
+                   CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+                   END-CALL
                    ADD 1 TO TESTS-RUN
-                   IF COUNT-OF-CARDS OF F-STACKS-T(F-STACK-I)
+                   IF RSP-CNT-STACK OF FOUNDATION
                       IS EQUAL TO TESTS-RANK
                       ADD 1 TO TESTS-OK
                    ELSE
                       ADD 1 TO TESTS-NOK
-                      DISPLAY COUNT-OF-CARDS OF F-STACKS-T(F-STACK-I)
+                      DISPLAY "FAILED: 02-TEST-SUIT-PUSH-ALL-OK:"
+                         WITH NO ADVANCING 
+                      DISPLAY " RSP-CNT-STACK = "
+                         WITH NO ADVANCING
+                      DISPLAY RSP-CNT-STACK " <> " TESTS-RANK
                    END-IF
-      
+
+      *            CHECK NEXT RANK IN STACK
+                   MOVE 4 TO REQ-OP-CODE OF FOUNDATION
+                   MOVE T-STACK-I TO REQ-STACK-NUM
+                   CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+                   END-CALL
                    ADD 1 TO TESTS-RUN
-                   IF NEXT-RANK OF F-STACKS-T(F-STACK-I)
-                      IS EQUAL TO TESTS-RANK + 1
+                   MOVE TESTS-RANK TO TESTS-NEXT-RANK
+                   ADD 1 TO TESTS-NEXT-RANK 
+                   IF RSP-NXT-RANK OF FOUNDATION IS
+                      EQUAL TO TESTS-NEXT-RANK
                       ADD 1 TO TESTS-OK
                    ELSE
                       ADD 1 TO TESTS-NOK
-                      DISPLAY NEXT-RANK OF F-STACKS-T(F-STACK-I)
+                      DISPLAY "FAILED: 02-TEST-SUIT-PUSH-ALL-OK:"
+                         WITH NO ADVANCING 
+                      DISPLAY "RSP-NXT-RANK ="
+                         WITH NO ADVANCING 
+                      DISPLAY RSP-NXT-RANK OF FOUNDATION " <> "
+                         WITH NO ADVANCING 
+                      DISPLAY TESTS-NEXT-RANK
                    END-IF
-      
+
                    IF TESTS-RANK IS LESS THAN 13 THEN
+      *               CHECK IS FULL STATE OF STACK
+                      MOVE 5 TO REQ-OP-CODE OF FOUNDATION
+                      MOVE T-STACK-I TO REQ-STACK-NUM
+                      CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF
+                         FOUNDATION
+                      END-CALL
                       ADD 1 TO TESTS-RUN
-                      IF IS-FULL OF F-STACKS-T(F-STACK-I) IS EQUAL TO
-                         'N'
+                      IF RSP-IS-FULL OF FOUNDATION IS EQUAL TO 'N'
                          ADD 1 TO TESTS-OK
                       ELSE
                          ADD 1 TO TESTS-NOK
-                         DISPLAY "L " IS-FULL OF F-STACKS-T(F-STACK-I)
+                         DISPLAY "FAILED: 02-TEST-SUIT-PUSH-ALL-OK:"
+                            WITH NO ADVANCING 
+                         DISPLAY "RSP-IS-FULLK ="
+                            WITH NO ADVANCING 
+                         DISPLAY RSP-IS-FULL OF FOUNDATION
+                            WITH NO ADVANCING 
+                         DISPLAY " <> N"
                       END-IF
                    END-IF
            END-PERFORM.
+
+      *    CHECK IS FULL STATE OF STACK
+           MOVE 5 TO REQ-OP-CODE OF FOUNDATION
+           MOVE T-STACK-I TO REQ-STACK-NUM
+           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF
+              FOUNDATION
+           END-CALL
            ADD 1 TO TESTS-RUN
-           IF IS-FULL OF F-STACKS-T(F-STACK-I) IS EQUAL TO 'Y'
+           IF RSP-IS-FULL OF FOUNDATION IS EQUAL TO 'Y'
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
-              DISPLAY "A " IS-FULL OF F-STACKS-T(F-STACK-I)
+              DISPLAY "FAILED: 02-TEST-SUIT-PUSH-ALL-OK:"
+                 WITH NO ADVANCING 
+              DISPLAY "RSP-IS-FULLK ="
+                 WITH NO ADVANCING 
+              DISPLAY RSP-IS-FULL OF FOUNDATION
+                 WITH NO ADVANCING 
+              DISPLAY " <> Y"
            END-IF.
 
       ******************************************************************
        03-TEST-SUIT-PUSH-1-TO-MANY.
            PERFORM 01-FOUNDATION-RESET.
 
-           MOVE REQ-SUIT-TO-PUSH TO F-STACK-I.
+           MOVE REQ-SUIT-TO-PUSH TO T-STACK-I.
 
            PERFORM VARYING TESTS-RANK
               FROM 1 BY 1
@@ -244,13 +346,43 @@
            END-IF.
 
       ******************************************************************
+       04-ILLEGAL-OP-CODES.
+           MOVE 0 TO REQ-OP-CODE OF FOUNDATION
+           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+           END-CALL.
+           ADD 1 TO TESTS-RUN
+           IF RSP-ERR-CODE OF FOUNDATION IS EQUAL TO 2
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "04-ILLEGAL-OP-CODES=0:" WITH NO ADVANCING 
+              DISPLAY " ERR-CODE=" RSP-ERR-CODE OF FOUNDATION
+                 WITH NO ADVANCING 
+              DISPLAY " <> 2"
+           END-IF.
+
+           MOVE 8 TO REQ-OP-CODE OF FOUNDATION
+           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+           END-CALL.
+           ADD 1 TO TESTS-RUN
+           IF RSP-ERR-CODE OF FOUNDATION IS EQUAL TO 2
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "04-ILLEGAL-OP-CODES=3:" WITH NO ADVANCING 
+              DISPLAY " ERR-CODE=" RSP-ERR-CODE OF FOUNDATION
+                 WITH NO ADVANCING 
+              DISPLAY " <> 2"
+           END-IF.
+
+      ******************************************************************
        10-TEST-PICS-OF-TOP-CARD.
            PERFORM 01-FOUNDATION-RESET.
 
-           PERFORM VARYING F-STACK-I
+           PERFORM VARYING T-STACK-I
               FROM 1 BY 1
-              UNTIL F-STACK-I > 4
-                   MOVE F-STACK-I TO REQ-SUIT-TO-PUSH
+              UNTIL T-STACK-I > 4
+                   MOVE T-STACK-I TO REQ-SUIT-TO-PUSH
                    PERFORM VARYING TESTS-RANK
                       FROM 1 BY 1
                       UNTIL TESTS-RANK > 13
@@ -272,7 +404,7 @@
 
       *       THE CARDS KNOW HOW TO MAP THIS
                            MOVE TESTS-RANK TO REQ-RANK-N OF CARDS
-                           MOVE F-STACK-I TO REQ-SUIT-N OF CARDS 
+                           MOVE T-STACK-I TO REQ-SUIT-N OF CARDS 
                            MOVE 2 TO REQ-OP-CODE OF CARDS
                            CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS
                            END-CALL
@@ -282,8 +414,13 @@
 
       *                    COMPARE NOW THE DATA OF THE CARD TO THE
       *                    FOUNDATION STACK
-      *                    CHECK RANK
-                           MOVE RANK-A OF F-STACKS-T(F-STACK-I) TO
+      *                    CHECK RANK-A OF STACK
+                           MOVE 6 TO REQ-OP-CODE OF FOUNDATION
+                           MOVE T-STACK-I TO REQ-STACK-NUM
+                           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF
+                              FOUNDATION
+                           END-CALL
+                           MOVE RSP-RANK-A OF FOUNDATION TO
                               T-RANK-A
                            ADD 1 TO TESTS-RUN
                            IF RANK-A OF C-RANK IS EQUAL TO T-RANK-A
@@ -298,8 +435,13 @@
                               DISPLAY " <> " T-RANK-A
                            END-IF
 
-      *                    CHECK SUIT
-                           MOVE SUIT-A OF F-STACKS-T(F-STACK-I) TO
+      *                    CHECK SUIT-A OF STACK
+                           MOVE 7 TO REQ-OP-CODE OF FOUNDATION
+                           MOVE T-STACK-I TO REQ-STACK-NUM
+                           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF
+                              FOUNDATION
+                           END-CALL
+                           MOVE RSP-SUIT-A OF FOUNDATION TO
                               T-SUIT-A
                            ADD 1 TO TESTS-RUN
                            IF SUIT-A OF C-SUIT IS EQUAL TO T-SUIT-A
@@ -312,8 +454,7 @@
                               DISPLAY "SUIT-A " SUIT-A OF C-SUIT
                                  WITH NO ADVANCING 
                               DISPLAY " <> " T-SUIT-A
-                           END-IF
-                           
+                           END-IF                           
                    END-PERFORM
            END-PERFORM.
 

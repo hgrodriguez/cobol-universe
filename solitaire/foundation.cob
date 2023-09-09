@@ -27,6 +27,28 @@
              04 RSP-RANK-A        PIC X.
       *            SUIT ALPHA CODE OF REQUESTED SUIT NUMBER
              04 RSP-SUIT-A        PIC X.
+      *          THE FOUNDATION HAS FOUR STACKS TO MAINTAIN
+      *          THE INDEX INTO THE SPECIFIC STACK IS DEFINED BY THE
+      *          SUIT NUMBER, AS WE HAVE FOUR SUITS
+
+      ******************************************************************
+      *          THE FOUNDATION HAS FOUR STACKS TO MAINTAIN
+      *          THE INDEX INTO THE SPECIFIC STACK IS DEFINED BY THE
+      *          SUIT NUMBER, AS WE HAVE FOUR SUITS
+       01 F-STACKS-T OCCURS 4 TIMES INDEXED BY F-STACK-I.
+      *            HOW MANY CARDS ARE IN THE STACK.
+          04 COUNT-OF-CARDS       PIC 99 VALUE 0.
+      *            NEXT ACCEPTABLE RANK
+      *            ALWAYS COUNT-OF-CARDS + 1
+          04 NEXT-RANK            PIC 99 VALUE 1.
+      *            SIGNAL, IF THE STACK IS FULL
+          04 IS-FULL              PIC X.
+      *            ALPHA CODE OF RANK OF TOP CARD:
+      *            A,2,3,4,5,6,7,8,9,T,J,Q,K             
+          04 RANK-A               PIC X.
+      *            ALPHA CODE OF SUIT OF TOP CARD:
+      *            D(IAMONDS),C(LUB),H(EARTS),S(PADES)
+          04 SUIT-A               PIC X.
 
        LINKAGE SECTION. 
       ******************************************************************
@@ -34,37 +56,57 @@
        01 FOUNDATION.
           03 REQ-RSP-BLOCK.
       *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
-             04 REQ-OP-CODE       PIC 9.
+      *      01 -> RESET
+      *      02 -> PUSH-1-CARD
+      *      03 -> RETURN NUMBER OF CARDS IN STACK
+      *      04 -> RETURN NEXT RANK IN STACK
+      *      05 -> RETURN THE FULL STATUS OF STACK
+      *      06 -> RETURN RANK-A OF STACK
+      *      07 -> RETURN SUIT-A OF STACK
+      *      99 -> PRINT
+             04 REQ-OP-CODE       PIC 99.
       *      THE SUIT OF THE CARD TO PUSH ONTO THE FOUNDATION
       *          INTO THE STACK WITH NUMBER SUIT-TO-PUSH.
              04 REQ-SUIT-TO-PUSH  PIC 9.
+      *         THE STACK NUMBER FOR THE REQUEST
+             04 REQ-STACK-NUM     PIC 9.
       *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-             04 RSP-ERR-CODE      PIC 9.
-      *          THE FOUNDATION HAS FOUR STACKS TO MAINTAIN
-      *          THE INDEX INTO THE SPECIFIC STACK IS DEFINED BY THE
-      *          SUIT NUMBER, AS WE HAVE FOUR SUITS
-          03 F-STACKS-T OCCURS 4 TIMES INDEXED BY F-STACK-I.
-      *            HOW MANY CARDS ARE IN THE STACK.
-             04 COUNT-OF-CARDS    PIC 99 VALUE 0.
-      *            NEXT ACCEPTABLE RANK
-      *            ALWAYS COUNT-OF-CARDS + 1
-             04 NEXT-RANK         PIC 99 VALUE 1.
-      *            SIGNAL, IF THE STACK IS FULL
-             04 IS-FULL           PIC X.
-      *            ALPHA CODE OF RANK OF TOP CARD:
-      *            A,2,3,4,5,6,7,8,9,T,J,Q,K             
-             04 RANK-A            PIC X.
-      *            ALPHA CODE OF SUIT OF TOP CARD:
-      *            D(IAMONDS),C(LUB),H(EARTS),S(PADES)
-             04 SUIT-A            PIC X.
+             04 RSP-ERR-CODE      PIC 99.
+      *         RESPONSE FOR COUNT OF CARDS IN STACK REQUESTED
+             04 RSP-CNT-STACK     PIC 99.
+      *         RESPONSE FOR NEXT RANK IN STACK REQUESTED
+             04 RSP-NXT-RANK      PIC 99.
+      *         RESPONSE FOR IS FULL STATE OF STACK REQUESTED
+             04 RSP-IS-FULL       PIC X.
+      *         RESPONSE OF ALPHA CODE OF RANK OF TOP CARD OF STACK
+      *         REQUESTED
+             04 RSP-RANK-A        PIC X.
+      *         RESPONSE OF ALPHA CODE OF SUIT OF TOP CARD OF STACK
+      *         REQUESTED
+             04 RSP-SUIT-A        PIC X.
 
       ******************************************************************
        PROCEDURE DIVISION USING FOUNDATION.
+           MOVE 0 TO RSP-ERR-CODE OF FOUNDATION 
            EVALUATE REQ-OP-CODE OF FOUNDATION 
            WHEN 1
                 PERFORM 01-RESET
            WHEN 2
-                PERFORM 01-PUSH-1-CARD
+                PERFORM 02-PUSH-1-CARD
+           WHEN 3
+                PERFORM 03-RETURN-STCK-CNT
+           WHEN 4
+                PERFORM 04-RETURN-NXT-RANK
+           WHEN 5
+                PERFORM 05-RETURN-IS-FULL
+           WHEN 6
+                PERFORM 06-RETURN-RANK-A
+           WHEN 7
+                PERFORM 07-RETURN-SUIT-A
+           WHEN 99
+                PERFORM 99-PRINT
+           WHEN OTHER
+                MOVE 2 TO RSP-ERR-CODE OF FOUNDATION 
            END-EVALUATE
 
            GOBACK.
@@ -85,7 +127,7 @@
            MOVE 0 TO RSP-ERR-CODE OF FOUNDATION.
 
       ******************************************************************
-       01-PUSH-1-CARD.
+       02-PUSH-1-CARD.
            IF COUNT-OF-CARDS OF F-STACKS-T(REQ-SUIT-TO-PUSH)
               IS EQUAL TO 13
               MOVE 1 TO RSP-ERR-CODE OF FOUNDATION
@@ -111,3 +153,41 @@
               F-STACKS-T(REQ-SUIT-TO-PUSH)
            MOVE RSP-SUIT-A OF CARDS TO SUIT-A OF
               F-STACKS-T(REQ-SUIT-TO-PUSH).
+
+      ******************************************************************
+       03-RETURN-STCK-CNT.
+           MOVE COUNT-OF-CARDS OF F-STACKS-T(REQ-STACK-NUM)
+              TO RSP-CNT-STACK.
+           
+      ******************************************************************
+       04-RETURN-NXT-RANK.
+           MOVE NEXT-RANK OF F-STACKS-T(REQ-STACK-NUM)
+              TO RSP-NXT-RANK.
+
+      ******************************************************************
+       05-RETURN-IS-FULL.
+           MOVE IS-FULL OF F-STACKS-T(REQ-STACK-NUM)
+              TO RSP-IS-FULL.
+
+      ******************************************************************
+       06-RETURN-RANK-A.
+           MOVE RANK-A OF F-STACKS-T(REQ-STACK-NUM)
+              TO RSP-RANK-A OF FOUNDATION.
+
+      ******************************************************************
+       07-RETURN-SUIT-A.
+           MOVE SUIT-A OF F-STACKS-T(REQ-STACK-NUM)
+              TO RSP-SUIT-A OF FOUNDATION.
+
+      ******************************************************************
+       99-PRINT.
+           PERFORM VARYING F-STACK-I
+              FROM 1 BY 1
+              UNTIL F-STACK-I > 4
+                   DISPLAY RANK-A OF F-STACKS-T(F-STACK-I)
+                      WITH NO ADVANCING 
+                   DISPLAY SUIT-A OF F-STACKS-T(F-STACK-I)
+                      WITH NO ADVANCING 
+                   DISPLAY ' '
+                      WITH NO ADVANCING 
+           END-PERFORM.
