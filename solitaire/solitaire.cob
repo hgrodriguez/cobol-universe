@@ -4,307 +4,361 @@
        DATA DIVISION. 
 
        WORKING-STORAGE SECTION. 
-      ******************************************************************
-      * RANK DEFINITIONS
-      *   DEFINES A RANK FOR A CARD IN THE GAME
-       01 RANK.
-      *      THE ALPHA LETTER OF THE RANK
-          02 RANK-A               PIC X.
-      *      THE NUMBER OF THE RANK
-          02 RANK-N               PIC 99.
-      
-      *   DEFINES ALL POSSIBLE RANKS FOR A CARD IN THE GAME
-       01 RANKS.
-      *      TABLE OF RANKS IN THE GAME
-          02 RANK-T OCCURS 13 TIMES INDEXED BY RANK-I.
-      *         THE ALPHA LETTER OF THE RANK
-             03 RANK-A            PIC X.
-      *         THE NUMBER OF THE RANK
-             03 RANK-N            PIC 99.                     
 
       ******************************************************************
-      * SUIT DEFINITIONS
-      *   DEFINES A SUIT FOR A CARD IN THE GAME
-       01 SUIT.
-      *      THE ALPHA LETTER OF THE SUIT
-          02 SUIT-A               PIC X.
-      *      THE COLOR OF THE SUIT
-          02 SUIT-C               PIC X.
-      *      THE NUMBER OF THE SUIT
-          02 SUIT-N               PIC 9.
-
-      
-      ******************************************************************
-      *   DEFINES ALL POSSIBLE SUITS FOR A CARD IN THE GAME
-       01 SUITS.
-      *      TABLE OF SUITS IN THE GAME
-          02 SUIT-T OCCURS 4 TIMES INDEXED BY SUIT-I.
-      *         THE ALPHA LETTER OF THE SUIT
-             03 SUIT-A            PIC X.
-      *         THE COLOR OF THE SUIT
-             03 SUIT-C            PIC X.                     
-      *         THE NUMBER OF THE SUIT
-             03 SUIT-N            PIC 9.
-
-      ******************************************************************
-      * CARD DEFINITIONS
-      *   DEFINES A CARD FOR THE GAME
-       01 CARD.
-          02 C-RANK.
-             03 RANK-A            PIC X.
-             03 RANK-N            PIC 99.
-          02 C-SUIT.
-             03 SUIT-A            PIC X.
-             03 SUIT-C            PIC X.
-             03 SUIT-N            PIC 9.
-
-      ******************************************************************
-      *   DEFINES ALL POSSIBLE CARDS IN THE GAME
-       01 CARDS.
-      *      TABLE OF CARDS IN THE GAME
-          04 CARDS-T OCCURS 52 TIMES INDEXED BY CARDS-I.
-             05 CARDS-RANK.
-                06 RANK-A         PIC X.
-                06 RANK-N         PIC 99.
-             05 CARDS-SUIT.
-                06 SUIT-A         PIC X.
-                06 SUIT-C         PIC X.
-                06 SUIT-N         PIC 9.
-
-      ******************************************************************
-      *   DEFINES THE STOCK OF THE GAME
-       01 STOCK.
-          02 RANDOM-INDEX         PIC 99.
-      *      HOW MANY CARDS ARE IN THE STOCK.
-      *      IN THE INITIALIZATION PHASE, THIS COUNTER GOES UP,
-      *        AS IT COUNTS THE CARDS TRANFERRED INTO THE STOCK
-      *      THE STOCK SHRINKS OVER TIME, WHEN WE FETCH CARDS
-          02 COUNT-OF-CARDS       PIC 99 VALUE 0.
-      *      TABLE OF CARDS IN THE STOCK
-          02 STOCK-T OCCURS 52 TIMES INDEXED BY STOCK-I.
-             05 STOCK-RANK.
-                06 RANK-A         PIC X.
-                06 RANK-N         PIC 99.
-             05 STOCK-SUIT.
-                06 SUIT-A         PIC X.
-                06 SUIT-C         PIC X.
-                06 SUIT-N         PIC 9.
-
-      ******************************************************************
-      *   DEFINES ALL FOUNDATION STACKS OF THE GAME
-       01 F-STACKS.
-      *      THE FOUNDATION HAS FOUR STACKS TO MAINTAIN
-          05 F-STACKS-T OCCURS 4 TIMES INDEXED BY F-STACK-I.
-      *         THE SUIT OF THIS FOUNDATION STACK.
-             10 STACK-SUIT-A      PIC X.
-      *         HOW MANY CARDS ARE IN THE STACK.
-             10 COUNT-OF-CARDS    PIC 99 VALUE 0.
-      *         NEXT ACCEPTABLE RANK
-      *         ALWAYS COUNT-OF-CARDS + 1
-             10 NEXT-RANK         PIC 99 VALUE 1.
-      *         SIGNAL, IF THE STACK IS FULL
-             10 IS-FULL           PIC X  VALUE 'N'.
-
-      ******************************************************************
-      *   DEFINES ALL TABLEAU STACKS OF THE GAME
-       01 T-STACKS.
-      *   THE TABLEAU HAS SEVEN STACKS TO MAINTAIN
-          05 T-STACKS-T OCCURS 7 TIMES INDEXED BY T-STACK-I.
-      *      HOW MANY CARDS ARE IN THE STACK.
-             10 COUNT-OF-CARDS    PIC 99 VALUE 0.
-      *      TABLE OF CARDS IN THE STACK
-             10 STACK-T OCCURS 52 TIMES INDEXED BY STACK-I.
-                30 STACK-RANK.
-                   40 RANK-A      PIC X.
-                   40 RANK-N      PIC 99.
-                30 STACK-SUIT.
-                   40 SUIT-A      PIC X.
-                   40 SUIT-C      PIC X.
-                   40 SUIT-N      PIC 9.
+      *   UNTIL THE USER DECIDES TO QUIT, WE RUN AGAIN
+       01 STAY-OPEN                PIC X  VALUE 'Y'.
 
       ******************************************************************
       *   DEFINES THE USER MENU SELECTION
        01 USER-SELECTION.
-          02 MENU-TO-SHOW         PIC 99.
-          02 MENU-ENTRY-SELECTED  PIC X.
+          02 MENU-TO-SHOW          PIC 99.
+          02 MENU-ENTRY-SELECTED   PIC X.
+
+      ******************************************************************
+      *   THIS WILL BE 1, IF WE MOVED ONE MANDATORY CARD
+       01 M-CARD-WAS-MOVED         PIC 9.
+      *   FLAG, IF AT LEAST ONE MANDATORY CARD WAS MOVED,
+      *   THEN WE HAVE TO PRINT THE GAME AGAIN
+       01 M-PRINT-GAME             PIC 9.
+      *   THIS IS ONE CARD WHICH IS MOVING AROUND
+       01 CARD.
+          02 RANK-N                PIC 99.
+          02 SUIT-N                PIC 9.
+      *   THE MAXIMUM NUMBER OF CARDS WHICH CAN BE FETCHED FROM
+      *   THE STOCK.
+       01 MAX-TO-FETCH             PIC 99.     
+      *   THE FETCH INDEX
+       01 FETCH-INDEX              PIC 9.
+       
+      ******************************************************************
+      *   CARDS API
+       01 CARDS.
+      *      THE REQUEST-RESPONSE-BLOCK
+          02 REQ-RSP-BLOCK.
+      *            THE OPERATION REQUESTED TO BE PERFORMED
+      *            1 = INITIALIZE CARDS
+             03 REQ-OP-CODE        PIC 9.
+      *            RANK NUMBER
+             03 REQ-RANK-N         PIC 99.
+      *            SUIT NUMBER
+             03 REQ-SUIT-N         PIC 9.
+      *            THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
+      *            1 = ILLEGAL OP
+      *            2 = ILLEGAL RANK: LOWER THAN MIN
+      *            3 = ILLEGAL RANK: HIGHER THAN MAX
+      *            4 = ILLEGAL SUIT: LOWER THAN MIN
+      *            5 = ILLEGAL SUIT: HIGHER THAN MAX
+             03 RSP-ERR-CODE       PIC 99.
+      *            RANK ALPHA CODE OF REQUESTED RANK NUMBER
+             03 RSP-RANK-A         PIC X.
+      *            SUIT ALPHA CODE OF REQUESTED SUIT NUMBER
+             03 RSP-SUIT-A         PIC X.
+      *   STOCK API
+       01 STOCK.
+          03 REQ-RSP-BLOCK.
+      *         THE OPERATION REQUESTED TO BE PERFORMED ON THE STOCK
+      *         01 -> FILL-STOCK
+      *         02 -> RANDOMIZE-STOCK
+      *         03 -> FETCH-CARD
+      *         04 -> TOGGLE-PEEK
+      *         05 -> PRINT-TOS
+      *         06 -> RETURN-NUM-CARDS
+      *         07 -> RETURN-CARD-INDEX
+      *         99 -> PRINT-STOCK
+             04 REQ-OP-CODE        PIC 99.
+             04 REQ-CARD-INDEX     PIC 99.
+      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
+      *            1 = ILLEGAL OP CODE
+      *            2 = NO CARDS LEFT
+             04 RSP-ERR-CODE       PIC 99.
+      *      THE CARD FETCHED FROM THE STOCK
+             04 RSP-CARD-FETCHED.
+                05 RSP-RANK-N      PIC 99.
+                05 RSP-SUIT-N      PIC 9.
+      *         TOP OF STOCK PRINT REPRESENTATION
+             04 RSP-TOS-PEEK       PIC 9.
+             04 RSP-TOS-RANK-A     PIC X.
+             04 RSP-TOS-SUIT-A     PIC X.
+             04 RSP-NUM-OF-CARDS   PIC 99.
+      *   FOUNDATION API
+       01 FOUNDATION.
+          03 REQ-RSP-BLOCK.
+      *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
+      *      01 -> RESET
+      *      02 -> PUSH-1-CARD
+      *      03 -> RETURN NUMBER OF CARDS IN STACK
+      *      04 -> RETURN NEXT RANK IN STACK
+      *      05 -> RETURN THE FULL STATUS OF STACK
+      *      06 -> RETURN RANK-A OF STACK
+      *      07 -> RETURN SUIT-A OF STACK
+      *      99 -> PRINT
+             04 REQ-OP-CODE        PIC 99.
+      *      THE SUIT OF THE CARD TO PUSH ONTO THE FOUNDATION
+      *          INTO THE STACK WITH NUMBER SUIT-TO-PUSH.
+             04 REQ-SUIT-TO-PUSH   PIC 9.
+      *         THE STACK NUMBER FOR THE REQUEST
+             04 REQ-STACK-NUM      PIC 9.
+      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
+             04 RSP-ERR-CODE       PIC 99.
+      *         RESPONSE FOR COUNT OF CARDS IN STACK REQUESTED
+             04 RSP-CNT-STACK      PIC 99.
+      *         RESPONSE FOR NEXT RANK IN STACK REQUESTED
+             04 RSP-NXT-RANK       PIC 99.
+      *         RESPONSE FOR IS FULL STATE OF STACK REQUESTED
+             04 RSP-IS-FULL        PIC X.
+      *         RESPONSE OF ALPHA CODE OF RANK OF TOP CARD OF STACK
+      *         REQUESTED
+             04 RSP-RANK-A         PIC X.
+      *         RESPONSE OF ALPHA CODE OF SUIT OF TOP CARD OF STACK
+      *         REQUESTED
+             04 RSP-SUIT-A         PIC X.
+      *   TABLEAU API
+       01 TABLEAU.
+          02 REQ-RSP-BLOCK.
+      *      THE OPERATION REQUESTED TO BE PERFORMED ON THE TABLEAU
+      *         01 -> RESET
+      *         02 -> INIT-FROM-STOCK
+      *         03 -> PUSH-TO-STACK
+      *         04 -> POP-FROM-STACK
+      *         05 -> MANDATORY-CHECK
+      *         06 -> MOVE-CARDS
+      *         07 -> NUMBER OF CARDS IN TABLEAU
+      *         08 -> NUMBER OF CARDS IN REQ STACK
+      *         09 -> RETURN CARD FROM (STACK, IDX)
+      *         99 -> PRINT
+             05 REQ-OP-CODE        PIC 99.
+      *         THE STACK-INDEX IN SCOPE FOR THE REQUESTED OPERATION
+             05 REQ-STCK-IDX       PIC 9.
+      *         THE CARD-INDEX IN SCOPE FOR THE REQUESTED OPERATION
+             05 REQ-CARD-IDX       PIC 99.
+      *         THE CARD IN SCOPE FOR THE REQUESTED OPERATION
+             05 CARD-IN-SCOPE.
+                26 RANK-N          PIC 99.
+                26 SUIT-N          PIC 9.
+      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
+             05 RSP-ERR-CODE       PIC 9.
+      *         NUMBER OF CARDS IN TABLEAU/STACK REQUESTED
+             05 RSP-NUM-CARDS      PIC 99.
+      *         WHICH STACK IS TO BE USED FOR MANDATORY CARD MOVE
+             05 RSP-MNDT-STCK-IDX  PIC 9.
+      *         THE RESPONSE CARD IN SCOPE FOR THE REQUESTED OPERATION
+             05 RSP-CARD.
+                26 RANK-N          PIC 99.
+                26 SUIT-N          PIC 9.
+      *         DATA WE NEED FOR MOVING CARDS IN THE TABLEAU
+      *         SOURCE STACK INDEX
+             05 MV-SRC-ST-I        PIC 9.
+      *         SOURCE CARD INDEX IN THE SOURCE STACK INDEX
+             05 MV-SRC-CA-I        PIC 99.
+      *         DESTINATION STACK INDEX
+             05 MV-DST-ST-I        PIC 9.
 
       ******************************************************************
        PROCEDURE DIVISION.
            
-           PERFORM INITIALIZE-WORLD.
-
-           MOVE 1 TO MENU-TO-SHOW.
-           CALL 'MENUS' USING USER-SELECTION
-           END-CALL
-
-           DISPLAY RANKS.
-           DISPLAY " "
-
-           DISPLAY SUITS.
-           DISPLAY " "
+           PERFORM START-GAME
            
-           PERFORM VARYING CARDS-I
-              FROM 1 BY 1
-              UNTIL CARDS-I > 52
-           
-                   DISPLAY CARDS-T(CARDS-I)
-           END-PERFORM
+           PERFORM UNTIL STAY-OPEN IS EQUAL TO 'N'
 
-           PERFORM VARYING STOCK-I
-              FROM 1 BY 1
-              UNTIL STOCK-I > 52
-           
-                   DISPLAY STOCK-T(STOCK-I)
-           END-PERFORM
-           
+                   PERFORM MOVE-MANDATORY-CARDS
+                   PERFORM DISPLAY-GAME
+
+                   MOVE 1 TO MENU-TO-SHOW
+                   CALL 'MENUS' USING USER-SELECTION
+                   END-CALL
+
+                   EVALUATE MENU-ENTRY-SELECTED
+                   WHEN 'F'
+                        PERFORM FETCH-FROM-STOCK
+                   WHEN 'H'
+                        PERFORM SHOW-HELP
+                   WHEN 'M'
+                        PERFORM MOVE-CARD
+                   WHEN 'Q'
+                        DISPLAY "QUITTING."
+                        MOVE 'N' TO STAY-OPEN
+                   WHEN 'S'
+                        PERFORM START-GAME
+                   END-EVALUATE
+           END-PERFORM.
            STOP RUN.
 
       ******************************************************************
-       INITIALIZE-WORLD.
-           PERFORM RANK-T-FILL-ALL.
-           PERFORM SUIT-T-FILL-ALL.
-           PERFORM CARD-T-FILL-ALL.
-           PERFORM STOCK-FILL.
-           PERFORM INITIALIZE-FOUNDATION.
+       START-GAME.
+           PERFORM INITIALIZE-WORLD.
 
       ******************************************************************
-       RANK-T-FILL-ALL.
-      *    SET ACE / 1
-           MOVE 'A' TO RANK-A OF RANK.
-           MOVE 1 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(1).
+       DISPLAY-GAME.
+           DISPLAY '   ' WITH NO ADVANCING.
+           MOVE 99 TO REQ-OP-CODE OF FOUNDATION.
+           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+           END-CALL.
+           DISPLAY ' ' WITH NO ADVANCING.
 
-      *    SET 2 / 2
-           MOVE '2' TO RANK-A OF RANK.
-           MOVE 2 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(2).
+           DISPLAY '     ' WITH NO ADVANCING.
+           MOVE 8 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL.
+           DISPLAY ' '.
 
-      *    SET 3 / 3
-           MOVE '3' TO RANK-A OF RANK.
-           MOVE 3 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(3).
-
-      *    SET 4 / 4
-           MOVE '4' TO RANK-A OF RANK.
-           MOVE 4 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(4).
-
-      *    SET 5 / 5
-           MOVE '5' TO RANK-A OF RANK.
-           MOVE 5 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(5).
-
-      *    SET 6 / 6
-           MOVE '6' TO RANK-A OF RANK.
-           MOVE 6 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(6).
-
-      *    SET 7 / 7
-           MOVE '7' TO RANK-A OF RANK.
-           MOVE 7 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(7).
-
-      *    SET 8 / 8
-           MOVE '8' TO RANK-A OF RANK.
-           MOVE 8 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(8).
-
-      *    SET 9 / 9
-           MOVE '9' TO RANK-A OF RANK.
-           MOVE 9 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(9).
-
-      *    SET 10[T] / 10
-           MOVE 'T' TO RANK-A OF RANK.
-           MOVE 10 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(10).           
-
-      *    SET JACK / 11
-           MOVE 'J' TO RANK-A OF RANK.
-           MOVE 11 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(11).           
-
-      *    SET QUEEN / 12
-           MOVE 'Q' TO RANK-A OF RANK.
-           MOVE 12 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(12).           
-
-      *    SET KING / 13
-           MOVE 'K' TO RANK-A OF RANK.
-           MOVE 13 TO RANK-N OF RANK.
-           MOVE RANK TO RANK-T(13).
+           MOVE 99 TO REQ-OP-CODE OF TABLEAU
+           CALL 'TABLEAU' USING REQ-RSP-BLOCK OF TABLEAU
+           END-CALL.
+           DISPLAY ' '.
 
       ******************************************************************
-       SUIT-T-FILL-ALL.
-      *    SET DIAMOND / RED
-           MOVE 'D' TO SUIT-A OF SUIT.
-           MOVE 'R' TO SUIT-C OF SUIT.
-           MOVE 1 TO SUIT-N OF SUIT.
-           MOVE SUIT TO SUIT-T(1).
+       FETCH-FROM-STOCK.
+           MOVE 6 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL.           
+           IF RSP-NUM-OF-CARDS IS EQUAL TO 0 THEN
+              DISPLAY 'STOCK IS EMPTY, NOTHING CAN BE FETCHED'
+           ELSE
+      *    DEFINE HOW MANY CARDS WE CAN FETCH     
+              IF RSP-NUM-OF-CARDS IS GREATER THAN 7 THEN
+                 MOVE 7 TO MAX-TO-FETCH
+              ELSE
+                 MOVE RSP-NUM-OF-CARDS TO MAX-TO-FETCH
+              END-IF
 
-      *    SET CLUB / BLACK
-           MOVE 'C' TO SUIT-A OF SUIT.
-           MOVE 'B' TO SUIT-C OF SUIT.
-           MOVE 2 TO SUIT-N OF SUIT.
-           MOVE SUIT TO SUIT-T(2).
+      *    FIRST CARD TO MOVE WILL GO INTO STACK #1 OF TABLEAU     
+              MOVE 1 TO REQ-STCK-IDX
+              PERFORM VARYING FETCH-INDEX
+                 FROM 1 BY 1
+                 UNTIL FETCH-INDEX IS GREATER THAN MAX-TO-FETCH
 
-      *    SET HEART / RED
-           MOVE 'H' TO SUIT-A OF SUIT.
-           MOVE 'R' TO SUIT-C OF SUIT.
-           MOVE 3 TO SUIT-N OF SUIT.
-           MOVE SUIT TO SUIT-T(3).
+                      MOVE 3 TO REQ-OP-CODE OF STOCK
+                      CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+                      END-CALL
 
-      *    SET SPADE / BLACK
-           MOVE 'S' TO SUIT-A OF SUIT.
-           MOVE 'B' TO SUIT-C OF SUIT.
-           MOVE 4 TO SUIT-N OF SUIT.
-           MOVE SUIT TO SUIT-T(4).
+      *    MOVE CARD FROM STOCK TO TABLEAU
+                      MOVE RSP-RANK-N OF RSP-CARD-FETCHED
+                         TO RANK-N OF CARD-IN-SCOPE 
+                      MOVE RSP-SUIT-N OF RSP-CARD-FETCHED
+                         TO SUIT-N OF CARD-IN-SCOPE 
+                      MOVE 3 TO REQ-OP-CODE OF TABLEAU
+                      CALL 'TABLEAU' USING TABLEAU
+                      END-CALL
+                      ADD 1 TO REQ-STCK-IDX
+              END-PERFORM
+           END-IF.
 
       ******************************************************************
-       CARD-T-FILL-ALL.
-      *    SET COUNTER TO INITIAL VALUE FOR THE TABLE
-           MOVE 1 TO CARDS-I.
-      *    RUN THROUGH ALL SUITS
-           PERFORM VARYING SUIT-I
-              FROM 1 BY 1
-              UNTIL SUIT-I > 4
-      *            RUN THROUGH ALL RANKS
-                   PERFORM VARYING RANK-I
+       MOVE-CARD.
+           DISPLAY 'MOVING CARDS'
+           DISPLAY 'WHICH STACK TO MOVE FROM (1-7)? ' WITH NO ADVANCING
+           ACCEPT MV-SRC-ST-I
+           DISPLAY 'WHICH CARD INDEX TO MOVE FROM? ' WITH NO ADVANCING
+           ACCEPT MV-SRC-CA-I
+           DISPLAY 'WHICH STACK TO MOVE TO (1-7)? ' WITH NO ADVANCING
+           ACCEPT MV-DST-ST-I
+
+           MOVE 6 TO REQ-OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING TABLEAU
+           END-CALL     
+           EVALUATE RSP-ERR-CODE OF REQ-RSP-BLOCK OF TABLEAU
+           WHEN 0 
+      *    MOVE THE CARD(S)
+                MOVE 6 TO REQ-OP-CODE OF TABLEAU
+                CALL 'TABLEAU' USING TABLEAU
+                END-CALL
+           WHEN 1
+                DISPLAY 'SOURCE STACK IS EMPTY'
+           WHEN 2 
+                DISPLAY 'ILLEGAL CARD INDEX'
+           WHEN 3 
+                DISPLAY 'RANK DOES NOT MATCH'
+           WHEN 4 
+                DISPLAY 'SUIT DOES NOT MATCH'
+           WHEN 5 
+                DISPLAY 'KING ONLY ON EMTPY STACK'
+           WHEN OTHER 
+                DISPLAY "INTERNAL ERROR, CALL THE ENGINEERS"
+           END-EVALUATE.
+
+
+      ******************************************************************
+       MOVE-MANDATORY-CARDS.
+           MOVE 0 TO M-PRINT-GAME.
+           MOVE 0 TO M-CARD-WAS-MOVED.
+           PERFORM WITH TEST AFTER UNTIL M-CARD-WAS-MOVED IS EQUAL TO 0
+                   MOVE 0 TO M-CARD-WAS-MOVED
+      *            WE GO THROUGH ALL STACKS IN THE FOUNDATION
+      *            THE STACK INDEX IS EQUAL TO THE SUIT
+                   PERFORM VARYING REQ-STACK-NUM
                       FROM 1 BY 1
-                      UNTIL RANK-I > 13
-      *                    HANDLE ALL ELEMENTS FOR THE CARD
-                           MOVE SUIT-T(SUIT-I) TO C-SUIT OF CARD
-                           MOVE RANK-T(RANK-I) TO C-RANK OF CARD
-      *                    ASSIGN THE CONSTRUCTED CARD
-                           MOVE CARD TO CARDS-T(CARDS-I)
-      *                    NEXT CARD TO PROCESS
-                           ADD 1 TO CARDS-I
+                      UNTIL REQ-STACK-NUM > 4
+      *    CHECK IF STACK IS FULL, THEN NOTHING TO MOVE ANYMORE
+                           MOVE 5 TO REQ-OP-CODE OF FOUNDATION
+                           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF
+                              FOUNDATION
+                           END-CALL
+                           IF RSP-IS-FULL OF FOUNDATION IS EQUAL TO 'N'
+                              THEN
+      *    CHECK NEXT RANK IN STACK
+                              MOVE 4 TO REQ-OP-CODE OF FOUNDATION
+                              CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF
+                                 FOUNDATION
+                              END-CALL
+      *    NOW WE CHECK THE TABLEAU, IF ANY TOS IS THE ONE WE NEED FOR
+      *    MOVING ONTO THE FOUNDATION
+                              MOVE RSP-NXT-RANK TO RANK-N OF
+                                 CARD-IN-SCOPE
+                              MOVE REQ-STACK-NUM TO SUIT-N OF
+                                 CARD-IN-SCOPE 
+                              MOVE 5 TO REQ-OP-CODE OF TABLEAU 
+                              CALL 'TABLEAU' USING TABLEAU
+                              END-CALL
+                              IF RSP-ERR-CODE OF TABLEAU IS EQUAL TO 0
+                                 THEN
+      *    WE FOUND A CANDIDATE TO MOVE
+      *    POP THIS CARD FROM THE TABLEAU
+                                 MOVE RSP-MNDT-STCK-IDX TO REQ-STCK-IDX
+                                 MOVE 4 TO REQ-OP-CODE OF TABLEAU
+                                 CALL 'TABLEAU' USING TABLEAU
+                                 END-CALL
+      *    PUSH THIS CARD ONTO THE FOUNDATION
+                                 MOVE 2 TO REQ-OP-CODE OF FOUNDATION
+                                 MOVE REQ-STACK-NUM TO REQ-SUIT-TO-PUSH
+                                 CALL 'FOUNDATION' USING REQ-RSP-BLOCK
+                                    OF FOUNDATION
+                                 END-CALL
+                                 MOVE 1 TO M-CARD-WAS-MOVED
+                              END-IF
+                           END-IF
                    END-PERFORM
            END-PERFORM.
 
       ******************************************************************
-       STOCK-FILL.
-           COMPUTE RANDOM-INDEX = FUNCTION RANDOM *(52 - 1 + 1) + 1
-           DISPLAY "RANDOM=" RANDOM-INDEX.
-
-           COMPUTE RANDOM-INDEX = FUNCTION RANDOM *(52 - 1 + 1) + 1
-           DISPLAY "RANDOM=" RANDOM-INDEX.
-
-           COMPUTE RANDOM-INDEX = FUNCTION RANDOM *(52 - 1 + 1) + 1
-           DISPLAY "RANDOM=" RANDOM-INDEX.
-
+       SHOW-HELP.
+           DISPLAY 'HELP OVERVIEW'.
 
       ******************************************************************
-       INITIALIZE-FOUNDATION.
-      *    RUN THROUGH ALL SUITS
-           PERFORM VARYING SUIT-I
-              FROM 1 BY 1
-              UNTIL SUIT-I > 4
-      *            ASSIGN THE SUIT CODE TO THE CORRECT FOUNDATION
-                   MOVE SUIT-A OF SUIT-T(SUIT-I) TO
-                      STACK-SUIT-A OF F-STACKS-T(SUIT-I)
-           END-PERFORM.
+       INITIALIZE-WORLD.
+           MOVE 1 TO REQ-OP-CODE OF CARDS.
+           CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS
+           END-CALL.
+           
+           MOVE 1 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL.           
 
+           MOVE 2 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL.           
+
+           MOVE 1 TO REQ-OP-CODE OF FOUNDATION.
+           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+           END-CALL.
+
+           MOVE 1 TO REQ-OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING TABLEAU
+           END-CALL.
+
+           MOVE 2 TO REQ-OP-CODE OF TABLEAU.
+           CALL 'TABLEAU' USING TABLEAU
+           END-CALL.
       *
       * IDENTIFICATION DIVISION.                                   
       * PROGRAM-ID. EXT7.                                           

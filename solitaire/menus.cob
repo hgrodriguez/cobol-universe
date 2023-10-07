@@ -5,6 +5,7 @@
 
        WORKING-STORAGE SECTION. 
        01 CHOICE                  PIC X.
+       01 ENTRY-IS-VALID          PIC X.
 
        LINKAGE SECTION. 
       ******************************************************************
@@ -14,6 +15,7 @@
           02 MENU-ENTRY-SELECTED  PIC X.
 
 
+      ******************************************************************
        PROCEDURE DIVISION USING USER-SELECTION.
            EVALUATE MENU-TO-SHOW
            WHEN 1
@@ -26,33 +28,41 @@
 
            EXIT PROGRAM.       
        
+      ******************************************************************
        01-MAIN-MENU.
            DISPLAY "01-MAIN-MENU".
            MOVE ' ' TO CHOICE.
-           PERFORM UNTIL CHOICE IS EQUAL TO 'Q'
+           MOVE 'N' TO ENTRY-IS-VALID.
+           PERFORM UNTIL ENTRY-IS-VALID IS EQUAL TO 'Y'
                    DISPLAY " "
-                   DISPLAY "Customer Interactive Program"
-                   DISPLAY "Please select the operation"
-                   DISPLAY "1) Add Customer"
-                   DISPLAY "2) Delete Customer"
-                   DISPLAY "3) Update Customer"
-                   DISPLAY "4) Get Customer"
+                   DISPLAY "F)ETCH CARDS FROM STOCK"
+                   DISPLAY "H)ELP"
+                   DISPLAY "M)OVE"
+                   DISPLAY "S)TART GAME"
                    DISPLAY "Q) Quit"
                    DISPLAY ": " WITH NO ADVANCING 
                    ACCEPT CHOICE
                    EVALUATE CHOICE
-                   WHEN '1'
-                        DISPLAY "1) Add Customer"
-                   WHEN '2'
-                        DISPLAY "2) Delete Customer"
-                   WHEN '3' 
-                        DISPLAY "3) Update Customer"
-                   WHEN '4'
-                        DISPLAY "4) Get Customer"
+                   WHEN 'F'
+                        MOVE CHOICE TO MENU-ENTRY-SELECTED
+                        MOVE 'Y' TO ENTRY-IS-VALID
+                   WHEN 'H'
+                        MOVE CHOICE TO MENU-ENTRY-SELECTED
+                        MOVE 'Y' TO ENTRY-IS-VALID
+                   WHEN 'M'
+                        MOVE CHOICE TO MENU-ENTRY-SELECTED
+                        MOVE 'Y' TO ENTRY-IS-VALID
+                   WHEN 'S'
+                        MOVE CHOICE TO MENU-ENTRY-SELECTED
+                        MOVE 'Y' TO ENTRY-IS-VALID
+                   WHEN 'Q'
+                        MOVE CHOICE TO MENU-ENTRY-SELECTED
+                        MOVE 'Y' TO ENTRY-IS-VALID
                    WHEN OTHER 
                         DISPLAY "wrong choice, please try again"
                    END-EVALUATE
            END-PERFORM.
 
+      ******************************************************************
        02-SETTINGS-MENU.
            DISPLAY "02-SETTINGS-MENU".

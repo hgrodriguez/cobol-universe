@@ -53,10 +53,20 @@
       *      DEFINES THE STOCK OF THE GAME
        01 STOCK.
           03 REQ-RSP-BLOCK.
-      *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
+      *         THE OPERATION REQUESTED TO BE PERFORMED ON THE STOCK
+      *         01 -> FILL-STOCK
+      *         02 -> RANDOMIZE-STOCK
+      *         03 -> FETCH-CARD
+      *         04 -> TOGGLE-PEEK
+      *         05 -> PRINT-TOS
+      *         06 -> RETURN-NUM-CARDS
+      *         99 -> PRINT-STOCK
              04 REQ-OP-CODE       PIC 99.
+             04 REQ-CARD-INDEX    PIC 99.
       *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-             04 RSP-ERR-CODE      PIC 9.
+      *            1 = ILLEGAL OP CODE
+      *            2 = NO CARDS LEFT
+             04 RSP-ERR-CODE      PIC 99.
       *      THE CARD FETCHED FROM THE STOCK
              04 RSP-CARD-FETCHED.
                 05 RSP-RANK-N     PIC 99.
@@ -65,15 +75,7 @@
              04 RSP-TOS-PEEK      PIC 9.
              04 RSP-TOS-RANK-A    PIC X.
              04 RSP-TOS-SUIT-A    PIC X.
-      *      HOW MANY CARDS ARE IN THE STOCK.
-      *      IN THE INITIALIZATION PHASE, THIS COUNTER GOES UP,
-      *        AS IT COUNTS THE CARDS TRANFERRED INTO THE STOCK
-      *      THE STOCK SHRINKS OVER TIME, WHEN WE FETCH CARDS
-          03 COUNT-OF-CARDS       PIC 99.
-      *      TABLE OF CARDS IN THE STOCK
-          03 STOCK-T OCCURS 52 TIMES INDEXED BY STOCK-I.
-             06 RANK-N            PIC 99.
-             06 SUIT-N            PIC 9.      
+             04 RSP-NUM-OF-CARDS  PIC 99.
 
       ******************************************************************
        PROCEDURE DIVISION.
@@ -149,8 +151,12 @@
                           
                            MOVE CARDS-R-I TO T-RANK-N
 
+                           MOVE 7 TO REQ-OP-CODE OF STOCK
+                           MOVE T-COUNTER TO REQ-CARD-INDEX OF STOCK 
+                           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+                           END-CALL
                            ADD 1 TO TESTS-RUN
-                           IF RANK-N OF STOCK-T(T-COUNTER)
+                           IF RSP-RANK-N OF RSP-CARD-FETCHED
                               IS EQUAL TO T-RANK-N
                               ADD 1 TO TESTS-OK
                            ELSE
@@ -158,8 +164,7 @@
                               DISPLAY "01-TEST-FILL-STOCK:"
                                  WITH NO ADVANCING 
                               DISPLAY "RANK-N="
-                                      RANK-N
-                                 OF STOCK-T(T-COUNTER)
+                                      RSP-RANK-N OF RSP-CARD-FETCHED
                                  WITH NO ADVANCING 
                               DISPLAY " <> T-RANK-N="
                                  WITH NO ADVANCING 
@@ -171,7 +176,7 @@
                            MOVE CARDS-S-I TO T-SUIT-N
 
                            ADD 1 TO TESTS-RUN
-                           IF SUIT-N OF STOCK-T(T-COUNTER)
+                           IF RSP-SUIT-N OF RSP-CARD-FETCHED
                               IS EQUAL TO T-SUIT-N
                               ADD 1 TO TESTS-OK
                            ELSE
@@ -179,8 +184,7 @@
                               DISPLAY "01-TEST-FILL-STOCK:"
                                  WITH NO ADVANCING 
                               DISPLAY "SUIT-N="
-                                      SUIT-N
-                                 OF STOCK-T(T-COUNTER)
+                                      RSP-SUIT-N OF RSP-CARD-FETCHED
                                  WITH NO ADVANCING 
                               DISPLAY " <> T-SUIT-N="
                                  WITH NO ADVANCING 
@@ -188,10 +192,8 @@
                                  WITH NO ADVANCING 
                               DISPLAY "T-COUNTER=" T-COUNTER 
                            END-IF
-
                    END-PERFORM
            END-PERFORM.
-
 
       ******************************************************************
        02-TEST-RANDOMIZE-STOCK.
@@ -203,13 +205,16 @@
 
       *    NOW WE NEED TO TEST THE RANDOMIZED DATA
       *    FIRST, IT MUST STILL BE 52 CARDS
+           MOVE 6 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL.           
            ADD 1 TO TESTS-RUN
-           IF COUNT-OF-CARDS OF STOCK IS EQUAL TO 52
+           IF RSP-NUM-OF-CARDS OF STOCK IS EQUAL TO 52
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
-              DISPLAY "COUNT-OF-CARDS=" WITH NO ADVANCING 
-              DISPLAY COUNT-OF-CARDS OF STOCK 
+              DISPLAY "RSP-NUM-OF-CARDS=" WITH NO ADVANCING 
+              DISPLAY RSP-NUM-OF-CARDS OF STOCK 
               GOBACK
            END-IF.
 
@@ -222,8 +227,12 @@
            PERFORM VARYING T-COUNTER
               FROM 1 BY 1
               UNTIL T-COUNTER > 52
-                   MOVE RANK-N OF STOCK-T(T-COUNTER) TO T-RANK-N 
-                   MOVE SUIT-N OF STOCK-T(T-COUNTER) TO T-SUIT-N 
+                   MOVE 7 TO REQ-OP-CODE OF STOCK
+                   MOVE T-COUNTER TO REQ-CARD-INDEX OF STOCK 
+                   CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+                   END-CALL
+                   MOVE RSP-RANK-N OF RSP-CARD-FETCHED TO T-RANK-N 
+                   MOVE RSP-SUIT-N OF RSP-CARD-FETCHED TO T-SUIT-N 
                    MOVE T-CARDS-I-P OF
                       T-CARDS-RANK-T(T-SUIT-N, T-RANK-N) TO T-I-P
 
@@ -249,32 +258,57 @@
 
            MOVE 52 TO T-COUNTER-CHECK
            SUBTRACT 1 FROM T-COUNTER-CHECK
+
+           MOVE 6 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL.           
            ADD 1 TO TESTS-RUN
-           IF COUNT-OF-CARDS OF STOCK IS EQUAL TO T-COUNTER-CHECK
+           IF RSP-NUM-OF-CARDS OF STOCK IS EQUAL TO T-COUNTER-CHECK
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "03-FETCH-1-FROM-STOCK"
-              DISPLAY "COUNT-OF-CARDS OF STOCK=" WITH NO
+              DISPLAY "RSP-NUM-OF-CARDS OF STOCK=" WITH NO
                  ADVANCING 
-              DISPLAY COUNT-OF-CARDS OF STOCK WITH NO ADVANCING 
+              DISPLAY RSP-NUM-OF-CARDS OF STOCK WITH NO ADVANCING 
               DISPLAY " <> T-COUNTER-CHECK=" WITH NO ADVANCING 
               DISPLAY T-COUNTER-CHECK
            END-IF.
 
+      *    STORE RANK/SUIT OF FETCHED CARD
+           MOVE RSP-RANK-N OF RSP-CARD-FETCHED TO T-RANK-N
+           MOVE RSP-SUIT-N OF RSP-CARD-FETCHED TO T-SUIT-N
+      *    FETCH TOS CARD
+           MOVE 7 TO REQ-OP-CODE OF STOCK.
+           MOVE 52 TO REQ-CARD-INDEX OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL.           
+      *    CHECK RANK
            ADD 1 TO TESTS-RUN
-           IF RSP-CARD-FETCHED OF STOCK IS EQUAL TO STOCK-T(52)
+           IF T-RANK-N IS EQUAL TO RSP-RANK-N OF RSP-CARD-FETCHED
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "03-FETCH-1-FROM-STOCK"
-              DISPLAY "CARD-FETCHED=" WITH NO
+              DISPLAY "T-RANK-N=" WITH NO
                  ADVANCING 
-              DISPLAY RSP-CARD-FETCHED OF STOCK WITH NO ADVANCING 
-              DISPLAY " <> STOCK-T(52)=" WITH NO ADVANCING 
-              DISPLAY STOCK-T(52)
+              DISPLAY T-RANK-N WITH NO ADVANCING 
+              DISPLAY " <> RANK-N=" WITH NO ADVANCING 
+              DISPLAY RSP-RANK-N OF RSP-CARD-FETCHED
+           END-IF
+      *    CHECK SUIT
+           ADD 1 TO TESTS-RUN
+           IF T-SUIT-N IS EQUAL TO RSP-SUIT-N OF RSP-CARD-FETCHED
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "03-FETCH-1-FROM-STOCK"
+              DISPLAY "T-SUIT-N=" WITH NO
+                 ADVANCING 
+              DISPLAY T-SUIT-N WITH NO ADVANCING 
+              DISPLAY " <> SUIT-N=" WITH NO ADVANCING 
+              DISPLAY RSP-SUIT-N OF RSP-CARD-FETCHED
            END-IF.
-
 
       ******************************************************************
        04-FETCH-ALL-FROM-STOCK.
@@ -288,15 +322,18 @@
 
            END-PERFORM.
 
+           MOVE 6 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL.           
            ADD 1 TO TESTS-RUN
-           IF COUNT-OF-CARDS OF STOCK IS EQUAL TO 0
+           IF RSP-NUM-OF-CARDS OF STOCK IS EQUAL TO 0
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "04-FETCH-ALL-FROM-STOCK"
-              DISPLAY "COUNT-OF-CARDS OF STOCK=" WITH NO
+              DISPLAY "RSP-NUM-OF-CARDS OF STOCK=" WITH NO
                  ADVANCING 
-              DISPLAY COUNT-OF-CARDS OF STOCK WITH NO ADVANCING 
+              DISPLAY RSP-NUM-OF-CARDS OF STOCK WITH NO ADVANCING 
               DISPLAY " <> 0"
            END-IF.
 
@@ -325,18 +362,6 @@
            END-PERFORM.
 
            ADD 1 TO TESTS-RUN
-           IF COUNT-OF-CARDS OF STOCK IS EQUAL TO 0
-              ADD 1 TO TESTS-OK
-           ELSE
-              ADD 1 TO TESTS-NOK
-              DISPLAY "05-FETCH-1-2-MANY-FROM-STOCK:" WITH NO ADVANCING 
-              DISPLAY "COUNT-OF-CARDS OF STOCK=" WITH NO
-                 ADVANCING 
-              DISPLAY COUNT-OF-CARDS OF STOCK WITH NO ADVANCING 
-              DISPLAY " <> 0"
-           END-IF.
-
-           ADD 1 TO TESTS-RUN
            IF RSP-ERR-CODE OF STOCK IS EQUAL TO 2
               ADD 1 TO TESTS-OK
            ELSE
@@ -347,6 +372,22 @@
               DISPLAY RSP-ERR-CODE OF STOCK WITH NO ADVANCING 
               DISPLAY " <> 2"
            END-IF.
+
+           MOVE 6 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL.           
+           ADD 1 TO TESTS-RUN
+           IF RSP-NUM-OF-CARDS OF STOCK IS EQUAL TO 0
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "05-FETCH-1-2-MANY-FROM-STOCK:" WITH NO ADVANCING 
+              DISPLAY "RSP-NUM-OF-CARDS OF STOCK=" WITH NO
+                 ADVANCING 
+              DISPLAY RSP-NUM-OF-CARDS OF STOCK WITH NO ADVANCING 
+              DISPLAY " <> 0"
+           END-IF.
+
 
       ******************************************************************
        06-FETCH-28-TO-FILL-TABLEAU.
@@ -361,15 +402,19 @@
            END-PERFORM.
            MOVE 52 TO T-COUNTER-CHECK
            SUBTRACT 28 FROM T-COUNTER-CHECK
+
+           MOVE 6 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL.           
            ADD 1 TO TESTS-RUN
-           IF COUNT-OF-CARDS OF STOCK IS EQUAL TO T-COUNTER-CHECK
+           IF RSP-NUM-OF-CARDS OF STOCK IS EQUAL TO T-COUNTER-CHECK
               ADD 1 TO TESTS-OK
            ELSE
               ADD 1 TO TESTS-NOK
               DISPLAY "04-FETCH-28-TO-FILL-TABLEAU"
-              DISPLAY "COUNT-OF-CARDS OF STOCK=" WITH NO
+              DISPLAY "RSP-NUM-OF-CARDS OF STOCK=" WITH NO
                  ADVANCING 
-              DISPLAY COUNT-OF-CARDS OF STOCK WITH NO ADVANCING 
+              DISPLAY RSP-NUM-OF-CARDS OF STOCK WITH NO ADVANCING 
               DISPLAY " <> T-COUNTER-CHECK=" WITH NO ADVANCING 
               DISPLAY T-COUNTER-CHECK
            END-IF.
@@ -424,9 +469,15 @@
 
       ******************************************************************
        22-PRINT-PEEK.
-      *       THE CARDS KNOW HOW TO MAP THIS
-           MOVE RANK-N OF STOCK-T(52) TO REQ-RANK-N OF CARDS
-           MOVE SUIT-N OF STOCK-T(52) TO REQ-SUIT-N OF CARDS 
+      *    FETCH TOS CARD
+           MOVE 7 TO REQ-OP-CODE OF STOCK.
+           MOVE 52 TO REQ-CARD-INDEX OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL
+
+      *    THE CARDS KNOW HOW TO MAP THIS
+           MOVE RSP-RANK-N OF RSP-CARD-FETCHED TO REQ-RANK-N OF CARDS
+           MOVE RSP-SUIT-N OF RSP-CARD-FETCHED TO REQ-SUIT-N OF CARDS 
            MOVE 2 TO REQ-OP-CODE OF CARDS
            CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS
            END-CALL

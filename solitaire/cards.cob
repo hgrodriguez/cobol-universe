@@ -77,22 +77,22 @@
        01 REQ-RSP-BLOCK.
       *            THE OPERATION REQUESTED TO BE PERFORMED
       *            1 = INITIALIZE CARDS
-          02 REQ-OP-CODE      PIC 9.
+          04 REQ-OP-CODE      PIC 9.
       *            RANK NUMBER
-          02 REQ-RANK-N       PIC 99.
+          04 REQ-RANK-N       PIC 99.
       *            SUIT NUMBER
-          02 REQ-SUIT-N       PIC 9.
+          04 REQ-SUIT-N       PIC 9.
       *            THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
       *            1 = ILLEGAL OP
       *            2 = ILLEGAL RANK: LOWER THAN MIN
       *            3 = ILLEGAL RANK: HIGHER THAN MAX
       *            4 = ILLEGAL SUIT: LOWER THAN MIN
       *            5 = ILLEGAL SUIT: HIGHER THAN MAX
-          02 RSP-ERR-CODE     PIC 99.
+          04 RSP-ERR-CODE     PIC 99.
       *            RANK ALPHA CODE OF REQUESTED RANK NUMBER
-          02 RSP-RANK-A       PIC X.
+          04 RSP-RANK-A       PIC X.
       *            SUIT ALPHA CODE OF REQUESTED SUIT NUMBER
-          02 RSP-SUIT-A       PIC X.
+          04 RSP-SUIT-A       PIC X.
 
       ******************************************************************
        PROCEDURE DIVISION USING REQ-RSP-BLOCK.
