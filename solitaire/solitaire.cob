@@ -1,8 +1,9 @@
+      ******************************************************************
+      * THIS IS THE MAIN PROGRAM FOR THE SOLITAIRE GAME
        IDENTIFICATION DIVISION.
        PROGRAM-ID. SOLITAIRE.
 
        DATA DIVISION. 
-
        WORKING-STORAGE SECTION. 
 
       ******************************************************************
@@ -14,6 +15,7 @@
        01 USER-SELECTION.
           02 MENU-TO-SHOW          PIC 99.
           02 MENU-ENTRY-SELECTED   PIC X.
+          02 MENU-PARAMETER        PIC X.
 
       ******************************************************************
       *   THIS WILL BE 1, IF WE MOVED ONE MANDATORY CARD
@@ -32,132 +34,69 @@
        01 FETCH-INDEX              PIC 9.
        
       ******************************************************************
-      *   CARDS API
-       01 CARDS.
-      *      THE REQUEST-RESPONSE-BLOCK
+       01 CARDS-API.
+      *   DOCUMENTATION: SEE CARDS.COB
           02 REQ-RSP-BLOCK.
-      *            THE OPERATION REQUESTED TO BE PERFORMED
-      *            1 = INITIALIZE CARDS
              03 REQ-OP-CODE        PIC 9.
-      *            RANK NUMBER
              03 REQ-RANK-N         PIC 99.
-      *            SUIT NUMBER
              03 REQ-SUIT-N         PIC 9.
-      *            THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-      *            1 = ILLEGAL OP
-      *            2 = ILLEGAL RANK: LOWER THAN MIN
-      *            3 = ILLEGAL RANK: HIGHER THAN MAX
-      *            4 = ILLEGAL SUIT: LOWER THAN MIN
-      *            5 = ILLEGAL SUIT: HIGHER THAN MAX
              03 RSP-ERR-CODE       PIC 99.
-      *            RANK ALPHA CODE OF REQUESTED RANK NUMBER
              03 RSP-RANK-A         PIC X.
-      *            SUIT ALPHA CODE OF REQUESTED SUIT NUMBER
              03 RSP-SUIT-A         PIC X.
-      *   STOCK API
-       01 STOCK.
-          03 REQ-RSP-BLOCK.
-      *         THE OPERATION REQUESTED TO BE PERFORMED ON THE STOCK
-      *         01 -> FILL-STOCK
-      *         02 -> RANDOMIZE-STOCK
-      *         03 -> FETCH-CARD
-      *         04 -> TOGGLE-PEEK
-      *         05 -> PRINT-TOS
-      *         06 -> RETURN-NUM-CARDS
-      *         07 -> RETURN-CARD-INDEX
-      *         99 -> PRINT-STOCK
-             04 REQ-OP-CODE        PIC 99.
-             04 REQ-CARD-INDEX     PIC 99.
-      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-      *            1 = ILLEGAL OP CODE
-      *            2 = NO CARDS LEFT
-             04 RSP-ERR-CODE       PIC 99.
-      *      THE CARD FETCHED FROM THE STOCK
-             04 RSP-CARD-FETCHED.
-                05 RSP-RANK-N      PIC 99.
-                05 RSP-SUIT-N      PIC 9.
-      *         TOP OF STOCK PRINT REPRESENTATION
-             04 RSP-TOS-PEEK       PIC 9.
-             04 RSP-TOS-RANK-A     PIC X.
-             04 RSP-TOS-SUIT-A     PIC X.
-             04 RSP-NUM-OF-CARDS   PIC 99.
-      *   FOUNDATION API
-       01 FOUNDATION.
-          03 REQ-RSP-BLOCK.
-      *      THE OPERATION REQUESTED TO BE PERFORMED ON THE FOUNDATION
-      *      01 -> RESET
-      *      02 -> PUSH-1-CARD
-      *      03 -> RETURN NUMBER OF CARDS IN STACK
-      *      04 -> RETURN NEXT RANK IN STACK
-      *      05 -> RETURN THE FULL STATUS OF STACK
-      *      06 -> RETURN RANK-A OF STACK
-      *      07 -> RETURN SUIT-A OF STACK
-      *      99 -> PRINT
-             04 REQ-OP-CODE        PIC 99.
-      *      THE SUIT OF THE CARD TO PUSH ONTO THE FOUNDATION
-      *          INTO THE STACK WITH NUMBER SUIT-TO-PUSH.
-             04 REQ-SUIT-TO-PUSH   PIC 9.
-      *         THE STACK NUMBER FOR THE REQUEST
-             04 REQ-STACK-NUM      PIC 9.
-      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-             04 RSP-ERR-CODE       PIC 99.
-      *         RESPONSE FOR COUNT OF CARDS IN STACK REQUESTED
-             04 RSP-CNT-STACK      PIC 99.
-      *         RESPONSE FOR NEXT RANK IN STACK REQUESTED
-             04 RSP-NXT-RANK       PIC 99.
-      *         RESPONSE FOR IS FULL STATE OF STACK REQUESTED
-             04 RSP-IS-FULL        PIC X.
-      *         RESPONSE OF ALPHA CODE OF RANK OF TOP CARD OF STACK
-      *         REQUESTED
-             04 RSP-RANK-A         PIC X.
-      *         RESPONSE OF ALPHA CODE OF SUIT OF TOP CARD OF STACK
-      *         REQUESTED
-             04 RSP-SUIT-A         PIC X.
-      *   TABLEAU API
-       01 TABLEAU.
+
+      ******************************************************************
+       01 STOCK-API.
+      *   DOCUMENTATION: SEE STOCK.COB
           02 REQ-RSP-BLOCK.
-      *      THE OPERATION REQUESTED TO BE PERFORMED ON THE TABLEAU
-      *         01 -> RESET
-      *         02 -> INIT-FROM-STOCK
-      *         03 -> PUSH-TO-STACK
-      *         04 -> POP-FROM-STACK
-      *         05 -> MANDATORY-CHECK
-      *         06 -> MOVE-CARDS
-      *         07 -> NUMBER OF CARDS IN TABLEAU
-      *         08 -> NUMBER OF CARDS IN REQ STACK
-      *         09 -> RETURN CARD FROM (STACK, IDX)
-      *         99 -> PRINT
+             03 REQ-OP-CODE        PIC 99.
+             03 REQ-CARD-INDEX     PIC 99.
+             03 RSP-ERR-CODE       PIC 99.
+             03 RSP-CARD-FETCHED.
+                04 RSP-RANK-N      PIC 99.
+                04 RSP-SUIT-N      PIC 9.
+             03 RSP-TOS-PEEK       PIC 9.
+             03 RSP-TOS-RANK-A     PIC X.
+             03 RSP-TOS-SUIT-A     PIC X.
+             03 RSP-NUM-OF-CARDS   PIC 99.
+
+      ******************************************************************
+       01 FOUNDATION-API.
+      *   DOCUMENTATION: SEE FOUNDATION.COB
+          02 REQ-RSP-BLOCK.
+             03 REQ-OP-CODE        PIC 99.
+             03 REQ-SUIT-TO-PUSH   PIC 9.
+             03 REQ-STACK-NUM      PIC 9.
+             03 RSP-ERR-CODE       PIC 99.
+             03 RSP-CNT-STACK      PIC 99.
+             03 RSP-NXT-RANK       PIC 99.
+             03 RSP-IS-FULL        PIC X.
+             03 RSP-RANK-A         PIC X.
+             03 RSP-SUIT-A         PIC X.
+
+      ******************************************************************
+       01 TABLEAU-API.
+      *   DOCUMENTATION: SEE TABLEAU.COB
+          02 REQ-RSP-BLOCK.
              05 REQ-OP-CODE        PIC 99.
-      *         THE STACK-INDEX IN SCOPE FOR THE REQUESTED OPERATION
              05 REQ-STCK-IDX       PIC 9.
-      *         THE CARD-INDEX IN SCOPE FOR THE REQUESTED OPERATION
              05 REQ-CARD-IDX       PIC 99.
-      *         THE CARD IN SCOPE FOR THE REQUESTED OPERATION
              05 CARD-IN-SCOPE.
                 26 RANK-N          PIC 99.
                 26 SUIT-N          PIC 9.
-      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
              05 RSP-ERR-CODE       PIC 9.
-      *         NUMBER OF CARDS IN TABLEAU/STACK REQUESTED
              05 RSP-NUM-CARDS      PIC 99.
-      *         WHICH STACK IS TO BE USED FOR MANDATORY CARD MOVE
              05 RSP-MNDT-STCK-IDX  PIC 9.
-      *         THE RESPONSE CARD IN SCOPE FOR THE REQUESTED OPERATION
              05 RSP-CARD.
                 26 RANK-N          PIC 99.
                 26 SUIT-N          PIC 9.
-      *         DATA WE NEED FOR MOVING CARDS IN THE TABLEAU
-      *         SOURCE STACK INDEX
              05 MV-SRC-ST-I        PIC 9.
-      *         SOURCE CARD INDEX IN THE SOURCE STACK INDEX
              05 MV-SRC-CA-I        PIC 99.
-      *         DESTINATION STACK INDEX
              05 MV-DST-ST-I        PIC 9.
 
       ******************************************************************
        PROCEDURE DIVISION.
            
-           PERFORM START-GAME
+           PERFORM INITIALIZE-WORLD
            
            PERFORM UNTIL STAY-OPEN IS EQUAL TO 'N'
 
@@ -178,39 +117,37 @@
                    WHEN 'Q'
                         DISPLAY "QUITTING."
                         MOVE 'N' TO STAY-OPEN
+                   WHEN 'R'
+                        PERFORM INITIALIZE-WORLD
                    WHEN 'S'
-                        PERFORM START-GAME
+                        PERFORM SETTINGS-DIALOG
                    END-EVALUATE
            END-PERFORM.
            STOP RUN.
 
       ******************************************************************
-       START-GAME.
-           PERFORM INITIALIZE-WORLD.
-
-      ******************************************************************
        DISPLAY-GAME.
            DISPLAY '   ' WITH NO ADVANCING.
-           MOVE 99 TO REQ-OP-CODE OF FOUNDATION.
-           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+           MOVE 99 TO REQ-OP-CODE OF FOUNDATION-API.
+           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION-API
            END-CALL.
            DISPLAY ' ' WITH NO ADVANCING.
 
            DISPLAY '     ' WITH NO ADVANCING.
-           MOVE 8 TO REQ-OP-CODE OF STOCK.
-           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           MOVE 8 TO REQ-OP-CODE OF STOCK-API.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK-API
            END-CALL.
            DISPLAY ' '.
 
-           MOVE 99 TO REQ-OP-CODE OF TABLEAU
-           CALL 'TABLEAU' USING REQ-RSP-BLOCK OF TABLEAU
+           MOVE 99 TO REQ-OP-CODE OF TABLEAU-API
+           CALL 'TABLEAU' USING REQ-RSP-BLOCK OF TABLEAU-API
            END-CALL.
            DISPLAY ' '.
 
       ******************************************************************
        FETCH-FROM-STOCK.
-           MOVE 6 TO REQ-OP-CODE OF STOCK.
-           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           MOVE 6 TO REQ-OP-CODE OF STOCK-API.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK-API
            END-CALL.           
            IF RSP-NUM-OF-CARDS IS EQUAL TO 0 THEN
               DISPLAY 'STOCK IS EMPTY, NOTHING CAN BE FETCHED'
@@ -228,8 +165,8 @@
                  FROM 1 BY 1
                  UNTIL FETCH-INDEX IS GREATER THAN MAX-TO-FETCH
 
-                      MOVE 3 TO REQ-OP-CODE OF STOCK
-                      CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+                      MOVE 3 TO REQ-OP-CODE OF STOCK-API
+                      CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK-API
                       END-CALL
 
       *    MOVE CARD FROM STOCK TO TABLEAU
@@ -237,8 +174,8 @@
                          TO RANK-N OF CARD-IN-SCOPE 
                       MOVE RSP-SUIT-N OF RSP-CARD-FETCHED
                          TO SUIT-N OF CARD-IN-SCOPE 
-                      MOVE 3 TO REQ-OP-CODE OF TABLEAU
-                      CALL 'TABLEAU' USING TABLEAU
+                      MOVE 3 TO REQ-OP-CODE OF TABLEAU-API
+                      CALL 'TABLEAU' USING TABLEAU-API
                       END-CALL
                       ADD 1 TO REQ-STCK-IDX
               END-PERFORM
@@ -254,14 +191,14 @@
            DISPLAY 'WHICH STACK TO MOVE TO (1-7)? ' WITH NO ADVANCING
            ACCEPT MV-DST-ST-I
 
-           MOVE 6 TO REQ-OP-CODE OF TABLEAU.
-           CALL 'TABLEAU' USING TABLEAU
+           MOVE 6 TO REQ-OP-CODE OF TABLEAU-API.
+           CALL 'TABLEAU' USING TABLEAU-API
            END-CALL     
-           EVALUATE RSP-ERR-CODE OF REQ-RSP-BLOCK OF TABLEAU
+           EVALUATE RSP-ERR-CODE OF REQ-RSP-BLOCK OF TABLEAU-API
            WHEN 0 
       *    MOVE THE CARD(S)
-                MOVE 6 TO REQ-OP-CODE OF TABLEAU
-                CALL 'TABLEAU' USING TABLEAU
+                MOVE 6 TO REQ-OP-CODE OF TABLEAU-API
+                CALL 'TABLEAU' USING TABLEAU-API
                 END-CALL
            WHEN 1
                 DISPLAY 'SOURCE STACK IS EMPTY'
@@ -277,6 +214,18 @@
                 DISPLAY "INTERNAL ERROR, CALL THE ENGINEERS"
            END-EVALUATE.
 
+      ******************************************************************
+       SETTINGS-DIALOG.
+           MOVE RSP-TOS-PEEK TO MENU-PARAMETER
+           MOVE 2 TO MENU-TO-SHOW
+           CALL 'MENUS' USING USER-SELECTION
+           END-CALL
+           EVALUATE MENU-ENTRY-SELECTED
+           WHEN 'T'
+                MOVE 4 TO REQ-OP-CODE OF STOCK-API
+                CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK-API
+                END-CALL
+           END-EVALUATE.
 
       ******************************************************************
        MOVE-MANDATORY-CARDS.
@@ -290,16 +239,16 @@
                       FROM 1 BY 1
                       UNTIL REQ-STACK-NUM > 4
       *    CHECK IF STACK IS FULL, THEN NOTHING TO MOVE ANYMORE
-                           MOVE 5 TO REQ-OP-CODE OF FOUNDATION
+                           MOVE 5 TO REQ-OP-CODE OF FOUNDATION-API
                            CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF
-                              FOUNDATION
+                              FOUNDATION-API
                            END-CALL
-                           IF RSP-IS-FULL OF FOUNDATION IS EQUAL TO 'N'
-                              THEN
+                           IF RSP-IS-FULL OF FOUNDATION-API
+                              IS EQUAL TO 'N' THEN
       *    CHECK NEXT RANK IN STACK
-                              MOVE 4 TO REQ-OP-CODE OF FOUNDATION
+                              MOVE 4 TO REQ-OP-CODE OF FOUNDATION-API
                               CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF
-                                 FOUNDATION
+                                 FOUNDATION-API
                               END-CALL
       *    NOW WE CHECK THE TABLEAU, IF ANY TOS IS THE ONE WE NEED FOR
       *    MOVING ONTO THE FOUNDATION
@@ -307,22 +256,22 @@
                                  CARD-IN-SCOPE
                               MOVE REQ-STACK-NUM TO SUIT-N OF
                                  CARD-IN-SCOPE 
-                              MOVE 5 TO REQ-OP-CODE OF TABLEAU 
-                              CALL 'TABLEAU' USING TABLEAU
+                              MOVE 5 TO REQ-OP-CODE OF TABLEAU-API 
+                              CALL 'TABLEAU' USING TABLEAU-API
                               END-CALL
-                              IF RSP-ERR-CODE OF TABLEAU IS EQUAL TO 0
-                                 THEN
+                              IF RSP-ERR-CODE OF TABLEAU-API
+                                 IS EQUAL TO 0 THEN
       *    WE FOUND A CANDIDATE TO MOVE
       *    POP THIS CARD FROM THE TABLEAU
                                  MOVE RSP-MNDT-STCK-IDX TO REQ-STCK-IDX
-                                 MOVE 4 TO REQ-OP-CODE OF TABLEAU
-                                 CALL 'TABLEAU' USING TABLEAU
+                                 MOVE 4 TO REQ-OP-CODE OF TABLEAU-API
+                                 CALL 'TABLEAU' USING TABLEAU-API
                                  END-CALL
       *    PUSH THIS CARD ONTO THE FOUNDATION
-                                 MOVE 2 TO REQ-OP-CODE OF FOUNDATION
+                                 MOVE 2 TO REQ-OP-CODE OF FOUNDATION-API
                                  MOVE REQ-STACK-NUM TO REQ-SUIT-TO-PUSH
                                  CALL 'FOUNDATION' USING REQ-RSP-BLOCK
-                                    OF FOUNDATION
+                                    OF FOUNDATION-API
                                  END-CALL
                                  MOVE 1 TO M-CARD-WAS-MOVED
                               END-IF
@@ -336,28 +285,28 @@
 
       ******************************************************************
        INITIALIZE-WORLD.
-           MOVE 1 TO REQ-OP-CODE OF CARDS.
-           CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS
+           MOVE 1 TO REQ-OP-CODE OF CARDS-API.
+           CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS-API
            END-CALL.
            
-           MOVE 1 TO REQ-OP-CODE OF STOCK.
-           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           MOVE 1 TO REQ-OP-CODE OF STOCK-API.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK-API
            END-CALL.           
 
-           MOVE 2 TO REQ-OP-CODE OF STOCK.
-           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           MOVE 2 TO REQ-OP-CODE OF STOCK-API.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK-API
            END-CALL.           
 
-           MOVE 1 TO REQ-OP-CODE OF FOUNDATION.
-           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION
+           MOVE 1 TO REQ-OP-CODE OF FOUNDATION-API.
+           CALL 'FOUNDATION' USING REQ-RSP-BLOCK OF FOUNDATION-API
            END-CALL.
 
-           MOVE 1 TO REQ-OP-CODE OF TABLEAU.
-           CALL 'TABLEAU' USING TABLEAU
+           MOVE 1 TO REQ-OP-CODE OF TABLEAU-API.
+           CALL 'TABLEAU' USING TABLEAU-API
            END-CALL.
 
-           MOVE 2 TO REQ-OP-CODE OF TABLEAU.
-           CALL 'TABLEAU' USING TABLEAU
+           MOVE 2 TO REQ-OP-CODE OF TABLEAU-API.
+           CALL 'TABLEAU' USING TABLEAU-API
            END-CALL.
       *
       * IDENTIFICATION DIVISION.                                   

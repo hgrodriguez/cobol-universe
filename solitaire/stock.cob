@@ -1,18 +1,28 @@
+      ******************************************************************
+      * SUBPROGRAM FOR THE STOCK IN THE SOLITAIRE GAME
        IDENTIFICATION DIVISION.
        PROGRAM-ID. STOCK.
 
        DATA DIVISION.
-
        WORKING-STORAGE SECTION. 
+      ******************************************************************
+      *   RANK ALPHA OF TOP OF STOCK
        01 RANK-A-TOS                    PIC X.
+      *   SUIT ALPHA OF TOP OF STOCK
        01 SUIT-A-TOS                    PIC X.
+      *   SUIT INDEX INTO THE CARD TABLE
        01 CARDS-S-I                     PIC 9.
+      *   RANK INDEX INTO THE CARD TABLE
        01 CARDS-R-I                     PIC 99.
-       01 PRINT-INDEX                   PIC 99.
+      *   MIN AND MAX OF STOCK INDICES
        01 MIN-NUMBER                    PIC 99    VALUE 1.
        01 MAX-NUMBER                    PIC 99    VALUE 52.
+      *   INDEX FOR RANDOMIZATION OD THE STOCK
        01 RANDOM-INDEX                  PIC 99.
+      *   RANDOM SEED
        01 SEED                          PIC 9999 COMP-3.
+      *   THE RESULT OF THE CURRENT DATE/TIME CALL
+      *   USED AS INPUT FOR THE SEED
        01 WS-CURRENT-DATE-DATA.
           05 WS-CURRENT-DATE.
              10 WS-CURRENT-YEAR         PIC 9(04).
@@ -23,43 +33,33 @@
              10 WS-CURRENT-MINUTE       PIC 9(02).
              10 WS-CURRENT-SECOND       PIC 9(02).
              10 WS-CURRENT-MILLISECONDS PIC 9(02).
+      *   THIS SHADOW IS THE BASE FOR FETCHING RANDOM CARDS
        01 SHADOW-STOCK.
           03 SHDW-STOCK-T OCCURS 52 TIMES INDEXED BY SHADOW-STOCK-I.
              06 SHDW-RANK-N             PIC 99.
              06 SHDW-SUIT-N             PIC 9.
              06 WAS-FETCHED             PIC X     VALUE 'N'.
-      *      HOW MANY CARDS ARE IN THE STOCK.
-      *      IN THE INITIALIZATION PHASE, THIS COUNTER GOES UP,
-      *        AS IT COUNTS THE CARDS TRANFERRED INTO THE STOCK
-      *      THE STOCK SHRINKS OVER TIME, WHEN WE FETCH CARDS
+      *   HOW MANY CARDS ARE IN THE STOCK.
+      *   IN THE INITIALIZATION PHASE, THIS COUNTER GOES UP,
+      *     AS IT COUNTS THE CARDS TRANFERRED INTO THE STOCK
+      *   THE STOCK SHRINKS OVER TIME, WHEN WE FETCH CARDS
        01 COUNT-OF-CARDS                PIC 99.
-      *      TABLE OF CARDS IN THE STOCK
+      *   TABLE OF CARDS IN THE STOCK
        01 STOCK-T OCCURS 52 TIMES INDEXED BY STOCK-I.
           06 RANK-N                     PIC 99.
           06 SUIT-N                     PIC 9.      
 
       ******************************************************************
-       01 CARDS.
+       01 CARDS-API.
+      *   DOCUMENTATION SEE CARDS.COB      
       *      THE REQUES-RESPONSE-BLOCK
-          03 REQ-RSP-BLOCK.
-      *            THE OPERATION REQUESTED TO BE PERFORMED
-      *            1 = INITIALIZE CARDS
-             04 REQ-OP-CODE             PIC 9.
-      *            RANK NUMBER
-             04 REQ-RANK-N              PIC 99.
-      *            SUIT NUMBER
-             04 REQ-SUIT-N              PIC 9.
-      *            THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-      *            1 = ILLEGAL OP
-      *            2 = ILLEGAL RANK: LOWER THAN MIN
-      *            3 = ILLEGAL RANK: HIGHER THAN MAX
-      *            4 = ILLEGAL SUIT: LOWER THAN MIN
-      *            5 = ILLEGAL SUIT: HIGHER THAN MAX
-             04 RSP-ERR-CODE            PIC 99.
-      *            RANK ALPHA CODE OF REQUESTED RANK NUMBER
-             04 RSP-RANK-A              PIC X.
-      *            SUIT ALPHA CODE OF REQUESTED SUIT NUMBER
-             04 RSP-SUIT-A              PIC X.
+          02 REQ-RSP-BLOCK.
+             03 REQ-OP-CODE             PIC 9.
+             03 REQ-RANK-N              PIC 99.
+             03 REQ-SUIT-N              PIC 9.
+             03 RSP-ERR-CODE            PIC 99.
+             03 RSP-RANK-A              PIC X.
+             03 RSP-SUIT-A              PIC X.
 
        LINKAGE SECTION. 
       ******************************************************************
@@ -81,6 +81,7 @@
       *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
       *            1 = ILLEGAL OP CODE
       *            2 = NO CARDS LEFT
+      *            3 = ILLEGAL CARD INDEX
              04 RSP-ERR-CODE            PIC 99.
       *      THE CARD FETCHED FROM THE STOCK
              04 RSP-CARD-FETCHED.
@@ -115,8 +116,8 @@
                 PERFORM 07-RETURN-CARD-INDEX
            WHEN 8
                 PERFORM 08-PRINT-TOS
-           WHEN 99
-                PERFORM 99-PRINT-STOCK
+           WHEN OTHER 
+                MOVE 1 TO RSP-ERR-CODE OF STOCK-API 
            END-EVALUATE
 
            GOBACK.
@@ -129,6 +130,7 @@
            PERFORM VARYING CARDS-S-I
               FROM 1 BY 1
               UNTIL CARDS-S-I > 4
+
       *            RUN THROUGH ALL RANKS
                    PERFORM VARYING CARDS-R-I
                       FROM 1 BY 1
@@ -141,7 +143,7 @@
                               TO SUIT-N OF STOCK-T(COUNT-OF-CARDS)
                    END-PERFORM
            END-PERFORM.
-
+      *    MAKE SURE, THAT WE DO NOT PEEK THE TOP OF STACK
            MOVE 0 TO RSP-TOS-PEEK.
 
       ******************************************************************
@@ -159,6 +161,7 @@
                       MIN-NUMBER
                    IF WAS-FETCHED OF SHDW-STOCK-T(RANDOM-INDEX)
                       IS EQUAL TO 'N'
+      *               THIS CARD HAS NOT BEEN FETCHED BEFORE -> USE IT
                       ADD 1 TO COUNT-OF-CARDS
                       MOVE SHDW-RANK-N OF
                          SHDW-STOCK-T(RANDOM-INDEX) TO
@@ -166,6 +169,7 @@
                       MOVE SHDW-SUIT-N OF
                          SHDW-STOCK-T(RANDOM-INDEX) TO
                          SUIT-N OF STOCK-T(COUNT-OF-CARDS)
+      *               MARK CARD AS FETCHED
                       MOVE 'Y' TO
                          WAS-FETCHED OF SHDW-STOCK-T(RANDOM-INDEX)
                    END-IF
@@ -189,7 +193,6 @@
               MOVE 0 TO RSP-TOS-PEEK
            END-IF.
            
-
       ******************************************************************
        05-RETURN-TOS.
            IF RSP-TOS-PEEK IS EQUAL TO 0 OR
@@ -197,18 +200,17 @@
               MOVE 'X' TO RSP-TOS-RANK-A 
               MOVE 'X' TO RSP-TOS-SUIT-A 
            ELSE
-
-      *       THE CARDS KNOW HOW TO MAP THIS
+      *       THE CARDS KNOW HOW TO MAP RANK AND SUIT NUMBER
               MOVE RANK-N OF STOCK-T(COUNT-OF-CARDS)
-                 TO REQ-RANK-N OF CARDS
+                 TO REQ-RANK-N OF CARDS-API
               MOVE SUIT-N OF STOCK-T(COUNT-OF-CARDS)
-                 TO REQ-SUIT-N OF CARDS 
-              MOVE 2 TO REQ-OP-CODE OF CARDS
-              CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS
+                 TO REQ-SUIT-N OF CARDS-API 
+              MOVE 2 TO REQ-OP-CODE OF CARDS-API
+              CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS-API
               END-CALL
 
-              MOVE RSP-RANK-A OF CARDS TO RSP-TOS-RANK-A
-              MOVE RSP-SUIT-A OF CARDS TO RSP-TOS-SUIT-A
+              MOVE RSP-RANK-A OF CARDS-API TO RSP-TOS-RANK-A
+              MOVE RSP-SUIT-A OF CARDS-API TO RSP-TOS-SUIT-A
            END-IF.
       
       ******************************************************************
@@ -217,6 +219,14 @@
 
       ******************************************************************
        07-RETURN-CARD-INDEX.
+           IF REQ-CARD-INDEX IS EQUAL TO 0
+              MOVE 3 TO RSP-ERR-CODE OF STOCK-API 
+              GOBACK
+           END-IF
+           IF REQ-CARD-INDEX IS GREATER THAN COUNT-OF-CARDS
+              MOVE 3 TO RSP-ERR-CODE OF STOCK-API 
+              GOBACK
+           END-IF
            MOVE STOCK-T(REQ-CARD-INDEX) TO RSP-CARD-FETCHED.
 
       ******************************************************************
@@ -226,18 +236,17 @@
               MOVE 'X' TO RANK-A-TOS
               MOVE 'X' TO SUIT-A-TOS
            ELSE
-
       *       THE CARDS KNOW HOW TO MAP THIS
               MOVE RANK-N OF STOCK-T(COUNT-OF-CARDS)
-                 TO REQ-RANK-N OF CARDS
+                 TO REQ-RANK-N OF CARDS-API
               MOVE SUIT-N OF STOCK-T(COUNT-OF-CARDS)
-                 TO REQ-SUIT-N OF CARDS 
-              MOVE 2 TO REQ-OP-CODE OF CARDS
-              CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS
+                 TO REQ-SUIT-N OF CARDS-API 
+              MOVE 2 TO REQ-OP-CODE OF CARDS-API
+              CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS-API
               END-CALL
 
-              MOVE RSP-RANK-A OF CARDS TO RANK-A-TOS
-              MOVE RSP-SUIT-A OF CARDS TO SUIT-A-TOS
+              MOVE RSP-RANK-A OF CARDS-API TO RANK-A-TOS
+              MOVE RSP-SUIT-A OF CARDS-API TO SUIT-A-TOS
            END-IF.
            DISPLAY RANK-A-TOS WITH NO ADVANCING 
            DISPLAY SUIT-A-TOS.
@@ -273,16 +282,3 @@
            MULTIPLY 100 BY SEED
            MOVE WS-CURRENT-SECOND TO SEED
            COMPUTE RANDOM-INDEX = FUNCTION RANDOM(SEED).
-
-      ******************************************************************
-       99-PRINT-STOCK.
-           DISPLAY 'COUNT-OF-CARDS=' COUNT-OF-CARDS
-           PERFORM VARYING PRINT-INDEX
-              FROM 1 BY 1
-              UNTIL PRINT-INDEX > 52
-                   DISPLAY PRINT-INDEX WITH NO ADVANCING 
-                   DISPLAY " RANK=" RANK-N OF STOCK-T(PRINT-INDEX)
-                      WITH NO ADVANCING 
-                   DISPLAY ", SUIT=" SUIT-N OF STOCK-T(PRINT-INDEX)
-           END-PERFORM.
-           DISPLAY " ".

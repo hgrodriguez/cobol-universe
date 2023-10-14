@@ -1,16 +1,22 @@
+      ******************************************************************
+      * SUBPROGRAM TABLEAU OF THE GAME OF SOLITAIRE
        IDENTIFICATION DIVISION.
        PROGRAM-ID. TABLEAU.
 
        DATA DIVISION.
-
        WORKING-STORAGE SECTION. 
       ******************************************************************
-
+      *   IN MOVING CARDS, THIS IS THE RANK WE CAN ACCEPT
        01 ACCEPT-RANK              PIC 99.
+      *   THE SUIT OF THE SOURCE CARD TO MOVE
        01 SRC-SUIT-OF-CARD         PIC 9.
+      *   THE SUIT OF THE DESTINATION CARD WHICH ACCEPTS THE MOVING CARD
        01 DST-SUIT-OF-CARD         PIC 9.
+      *   THE TWO SUITS, WHICH CAN BE ACCEPTED
+      *   THEY ARE BOTH EITHER BLACK OR RED
        01 ACCEPT-S-1               PIC 9.
        01 ACCEPT-S-2               PIC 9.
+      *   THE TRANSFER BUFFER FOR THE CARDS TO BE MOVED
        01 XFER.
       *      HOW MANY CARDS ARE TO BE MOVED.
           02 MOVE-COUNT            PIC 99.
@@ -20,73 +26,53 @@
           02 XFER-T OCCURS 52 TIMES INDEXED BY XFER-I.
              03 XFER-RANK-N        PIC 99.
              03 XFER-SUIT-N        PIC 9.      
-      *         HOW MANY CARDS ARE IN THE TABLEAU.
+      *   HOW MANY CARDS ARE IN THE TABLEAU.
        01 T-COUNT-OF-CARDS         PIC 99.
+      *   WE HAVE 7 STACKS IN THE TABLEAU
        01 T-STACKS-T OCCURS 7 TIMES INDEXED BY T-STACK-I.
-      *            HOW MANY CARDS ARE IN THE STACK.
-          10 COUNT-OF-CARDS        PIC 99 VALUE 0.
-      *            THE CARDS IN ONE STACK
-          10 CARDS-T OCCURS 52 TIMES INDEXED BY CARDS-T-I.
-             26 RANK-N             PIC 99.
-             26 SUIT-N             PIC 9.
+      *      HOW MANY CARDS ARE IN THE STACK.
+          02 COUNT-OF-CARDS        PIC 99 VALUE 0.
+      *      THE CARDS IN ONE STACK
+          02 CARDS-T OCCURS 52 TIMES INDEXED BY CARDS-T-I.
+             03 RANK-N             PIC 99.
+             03 SUIT-N             PIC 9.
+      *   THESE ARE FOR PRINTING THE TABLEAU
+      *   THE DEEPEST STACK DEPTH TO HANDLE
        01 MAX-STACK-DEPTH          PIC 99.
+      *   STACK NUMBER TO PRINT
        01 PRINT-STACK              PIC 99.
+      *   NUMBER OF STACK TO PRINT
        01 COLUMN-NUM               PIC 9.
        
-      *      DEFINES ALL POSSIBLE CARDS IN THE GAME
-       01 CARDS.
-      *      THE REQUEST-RESPONSE-BLOCK
+      ******************************************************************
+       01 CARDS-API.
+      *   DOCUMENTATION SEE: CARDS.COB
           03 REQ-RSP-BLOCK.
-      *            THE OPERATION REQUESTED TO BE PERFORMED
-      *            1 = INITIALIZE CARDS
              04 REQ-OP-CODE        PIC 9.
-      *            RANK NUMBER
              04 REQ-RANK-N         PIC 99.
-      *            SUIT NUMBER
              04 REQ-SUIT-N         PIC 9.
-      *            THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-      *            1 = ILLEGAL OP
-      *            2 = ILLEGAL RANK: LOWER THAN MIN
-      *            3 = ILLEGAL RANK: HIGHER THAN MAX
-      *            4 = ILLEGAL SUIT: LOWER THAN MIN
-      *            5 = ILLEGAL SUIT: HIGHER THAN MAX
              04 RSP-ERR-CODE       PIC 99.
-      *            RANK ALPHA CODE OF REQUESTED RANK NUMBER
              04 RSP-RANK-A         PIC X.
-      *            SUIT ALPHA CODE OF REQUESTED SUIT NUMBER
              04 RSP-SUIT-A         PIC X.
 
-      *      DEFINES THE STOCK OF THE GAME
-       01 STOCK.
-          03 REQ-RSP-BLOCK.
-      *         THE OPERATION REQUESTED TO BE PERFORMED ON THE STOCK
-      *         01 -> FILL-STOCK
-      *         02 -> RANDOMIZE-STOCK
-      *         03 -> FETCH-CARD
-      *         04 -> TOGGLE-PEEK
-      *         05 -> PRINT-TOS
-      *         06 -> RETURN-NUM-CARDS
-      *         07 -> RETURN-CARD-INDEX
-      *         99 -> PRINT-STOCK
-             04 REQ-OP-CODE        PIC 99.
-             04 REQ-CARD-INDEX     PIC 99.
-      *      THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-      *            1 = ILLEGAL OP CODE
-      *            2 = NO CARDS LEFT
-             04 RSP-ERR-CODE       PIC 99.
-      *      THE CARD FETCHED FROM THE STOCK
-             04 RSP-CARD-FETCHED.
-                05 RSP-RANK-N      PIC 99.
-                05 RSP-SUIT-N      PIC 9.
-      *         TOP OF STOCK PRINT REPRESENTATION
-             04 RSP-TOS-PEEK       PIC 9.
-             04 RSP-TOS-RANK-A     PIC X.
-             04 RSP-TOS-SUIT-A     PIC X.
-             04 RSP-NUM-OF-CARDS   PIC 99.
+      ******************************************************************
+       01 STOCK-API.
+      *   DOCUMENTATION SEE: STOCK.COB
+          02 REQ-RSP-BLOCK.
+             03 REQ-OP-CODE        PIC 99.
+             03 REQ-CARD-INDEX     PIC 99.
+             03 RSP-ERR-CODE       PIC 99.
+             03 RSP-CARD-FETCHED.
+                04 RSP-RANK-N      PIC 99.
+                04 RSP-SUIT-N      PIC 9.
+             03 RSP-TOS-PEEK       PIC 9.
+             03 RSP-TOS-RANK-A     PIC X.
+             03 RSP-TOS-SUIT-A     PIC X.
+             03 RSP-NUM-OF-CARDS   PIC 99.
 
        LINKAGE SECTION. 
       ******************************************************************
-       01 TABLEAU.
+       01 TABLEAU-API.
           02 REQ-RSP-BLOCK.
       *      THE OPERATION REQUESTED TO BE PERFORMED ON THE TABLEAU
       *         01 -> RESET
@@ -127,13 +113,13 @@
              05 MV-DST-ST-I        PIC 9.
 
       ******************************************************************
-       PROCEDURE DIVISION USING TABLEAU.
+       PROCEDURE DIVISION USING TABLEAU-API.
       *    PRE-CONDITION: 
       *       CARDS, STOCK ARE FILLED.
 
-           MOVE 0 TO RSP-ERR-CODE OF TABLEAU
+           MOVE 0 TO RSP-ERR-CODE OF TABLEAU-API
 
-           EVALUATE REQ-OP-CODE OF TABLEAU
+           EVALUATE REQ-OP-CODE OF TABLEAU-API
            WHEN 1
                 PERFORM 01-RESET
            WHEN 2
@@ -160,7 +146,7 @@
 
       ******************************************************************
        01-RESET.
-           MOVE 0 TO RSP-ERR-CODE OF TABLEAU.
+           MOVE 0 TO RSP-ERR-CODE OF TABLEAU-API.
            MOVE 0 TO T-COUNT-OF-CARDS.
 
            PERFORM VARYING T-STACK-I
@@ -169,37 +155,26 @@
                    MOVE 0 TO COUNT-OF-CARDS OF T-STACKS-T(T-STACK-I)
            END-PERFORM.
 
-           PERFORM VARYING T-STACK-I
-              FROM 1 BY 1
-              UNTIL T-STACK-I > 7
-
-                   PERFORM VARYING CARDS-T-I
-                      FROM 1 BY 1
-                      UNTIL CARDS-T-I > 52
-
-                           MOVE 0 TO RANK-N OF CARDS-T(T-STACK-I,
-                              CARDS-T-I)
-                           MOVE 0 TO SUIT-N OF CARDS-T(T-STACK-I,
-                              CARDS-T-I)
-                   END-PERFORM
-           END-PERFORM.
-
       ******************************************************************
        02-INIT-FROM-STOCK.
+      *    GO THROUGH ALL STACKS WE HAVE
            PERFORM VARYING T-STACK-I
               FROM 1 BY 1
               UNTIL T-STACK-I > 7
 
+      *            THE DEPTH OF THE STACK IS DEFINED BY THE OWN
+      *            STACK NUMBER
+      *            WE NEED A TRIANGLE TO START THE GAME
                    PERFORM VARYING CARDS-T-I
                       FROM 1 BY 1
                       UNTIL CARDS-T-I > T-STACK-I
 
-                           MOVE 3 TO REQ-OP-CODE OF STOCK
-                           CALL 'STOCK' USING STOCK
+                           MOVE 3 TO REQ-OP-CODE OF STOCK-API
+                           CALL 'STOCK' USING STOCK-API
                            END-CALL
 
-                           MOVE RSP-CARD-FETCHED OF STOCK TO CARDS-T
-                              (T-STACK-I, CARDS-T-I)
+                           MOVE RSP-CARD-FETCHED OF STOCK-API TO
+                              CARDS-T(T-STACK-I, CARDS-T-I)
 
                            ADD 1 TO T-COUNT-OF-CARDS
                            ADD 1 TO COUNT-OF-CARDS OF T-STACKS-T
@@ -209,6 +184,8 @@
 
       ******************************************************************
        03-PUSH-TO-STACK.
+      *    THIS CAN PUSH ANY CARD ONTO THE STACK DEFINED
+      *    THIS IS USED WHEN WE MOVE A CARD FROM THE STOCK
            ADD 1 TO T-COUNT-OF-CARDS
            ADD 1 TO COUNT-OF-CARDS OF T-STACKS-T(REQ-STCK-IDX).
 
@@ -223,23 +200,23 @@
       ******************************************************************
        04-POP-FROM-STACK.
            IF T-COUNT-OF-CARDS IS EQUAL TO 0
-              MOVE 1 TO RSP-ERR-CODE OF TABLEAU
+              MOVE 1 TO RSP-ERR-CODE OF TABLEAU-API
               GOBACK
            END-IF
 
            IF COUNT-OF-CARDS OF T-STACKS-T(REQ-STCK-IDX)
               IS EQUAL TO 0
-              MOVE 2 TO RSP-ERR-CODE OF TABLEAU
+              MOVE 2 TO RSP-ERR-CODE OF TABLEAU-API
               GOBACK
            END-IF.
 
            MOVE RANK-N OF CARDS-T(REQ-STCK-IDX, COUNT-OF-CARDS
               OF T-STACKS-T(REQ-STCK-IDX)) TO
-              RANK-N OF RSP-CARD OF TABLEAU
+              RANK-N OF RSP-CARD OF TABLEAU-API
 
            MOVE SUIT-N OF CARDS-T(REQ-STCK-IDX, COUNT-OF-CARDS
               OF T-STACKS-T(REQ-STCK-IDX)) TO
-              SUIT-N OF RSP-CARD OF TABLEAU
+              SUIT-N OF RSP-CARD OF TABLEAU-API
 
            SUBTRACT 1 FROM T-COUNT-OF-CARDS
            SUBTRACT 1 FROM COUNT-OF-CARDS OF
@@ -247,8 +224,10 @@
 
       ******************************************************************
        05-MANDATORY-CHECK.
+      *    CHECKS ALL STACKS, IF THERE IS A CARD WHICH MUST BE
+      *    MOVED TO THE FOUNDATION DUE TO THE GAME RULES
            IF T-COUNT-OF-CARDS IS EQUAL TO 0
-              MOVE 1 TO RSP-ERR-CODE OF TABLEAU
+              MOVE 1 TO RSP-ERR-CODE OF TABLEAU-API
               GOBACK
            END-IF.
 
@@ -263,25 +242,27 @@
                       OF T-STACKS-T(T-STACK-I)))
 
       *               MATCH FOUND -> LEAVE
-                      MOVE 0 TO RSP-ERR-CODE OF TABLEAU
+                      MOVE 0 TO RSP-ERR-CODE OF TABLEAU-API
                       MOVE T-STACK-I TO RSP-MNDT-STCK-IDX
                       GOBACK
            END-PERFORM
       *    NO MATCH FOUND
-           MOVE 2 TO RSP-ERR-CODE OF TABLEAU.
+           MOVE 2 TO RSP-ERR-CODE OF TABLEAU-API.
 
       ******************************************************************
        06-MOVE-CARDS.
+      *    MOVES ONE OR MORE CARDS FROM ONE STACK TO ANOTHER
+      *    GIVEN THAT THE RULES ARE RESPECTED
            IF COUNT-OF-CARDS OF T-STACKS-T(MV-SRC-ST-I)
               IS EQUAL TO 0
-              MOVE 1 TO RSP-ERR-CODE OF TABLEAU
+              MOVE 1 TO RSP-ERR-CODE OF TABLEAU-API
               GOBACK
            END-IF.
 
       *    ILLEGAL INDEX INTO THE SOURCE STACK
            IF MV-SRC-CA-I IS GREATER THAN
               COUNT-OF-CARDS OF T-STACKS-T(MV-SRC-ST-I) 
-              MOVE 2 TO RSP-ERR-CODE OF TABLEAU
+              MOVE 2 TO RSP-ERR-CODE OF TABLEAU-API
               GOBACK
            END-IF.
 
@@ -290,7 +271,8 @@
               MOVE 13 TO ACCEPT-RANK
               IF RANK-N OF CARDS-T(MV-SRC-ST-I, MV-SRC-CA-I)
                  IS NOT EQUAL TO ACCEPT-RANK
-                 MOVE 5 TO RSP-ERR-CODE OF TABLEAU
+      *          ONLY A KING CAN BE MOVED ONTO AN EMPTY STACK
+                 MOVE 5 TO RSP-ERR-CODE OF TABLEAU-API
               ELSE
       *          MOVE THE KING STACK AND GET OUT OF HERE
                  PERFORM 80-MOVE-CARDS
@@ -305,7 +287,7 @@
 
            IF RANK-N OF CARDS-T(MV-SRC-ST-I, MV-SRC-CA-I)
               IS NOT EQUAL TO ACCEPT-RANK
-              MOVE 3 TO RSP-ERR-CODE OF TABLEAU
+              MOVE 3 TO RSP-ERR-CODE OF TABLEAU-API
               GOBACK
            END-IF.
 
@@ -331,7 +313,7 @@
       *       FIRST OPTION IS ALREADY WRONG
               IF (SRC-SUIT-OF-CARD IS NOT EQUAL TO ACCEPT-S-2)
       *          SECOND OPTION IS A MISS, TOO
-                 MOVE 4 TO RSP-ERR-CODE OF TABLEAU
+                 MOVE 4 TO RSP-ERR-CODE OF TABLEAU-API
                  GOBACK
               END-IF
            END-IF.
@@ -401,7 +383,7 @@
                    PERFORM 03-PUSH-TO-STACK
            END-PERFORM.
            
-           MOVE 0 TO RSP-ERR-CODE OF TABLEAU.
+           MOVE 0 TO RSP-ERR-CODE OF TABLEAU-API.
 
       ******************************************************************
        99-PRINT.
@@ -446,18 +428,19 @@
                               DISPLAY '  ' WITH NO ADVANCING
                            ELSE
       *               THERE IS A CARD TO BE DISPLAYED
-                              MOVE 2 TO REQ-OP-CODE OF CARDS
+                              MOVE 2 TO REQ-OP-CODE OF CARDS-API
                               MOVE RANK-N OF CARDS-T(T-STACK-I,
                                  PRINT-STACK)
-                                 TO REQ-RANK-N OF CARDS
+                                 TO REQ-RANK-N OF CARDS-API
                               MOVE SUIT-N OF CARDS-T(T-STACK-I,
                                  PRINT-STACK)
-                                 TO REQ-SUIT-N OF CARDS
-                              CALL 'CARDS' USING REQ-RSP-BLOCK OF CARDS
+                                 TO REQ-SUIT-N OF CARDS-API
+                              CALL 'CARDS' USING
+                                 REQ-RSP-BLOCK OF CARDS-API
                               END-CALL
-                              DISPLAY RSP-RANK-A OF CARDS
+                              DISPLAY RSP-RANK-A OF CARDS-API
                                  WITH NO ADVANCING 
-                              DISPLAY RSP-SUIT-A OF CARDS
+                              DISPLAY RSP-SUIT-A OF CARDS-API
                                  WITH NO ADVANCING 
                            END-IF
                            DISPLAY ' ' WITH NO ADVANCING 

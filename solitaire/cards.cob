@@ -1,10 +1,10 @@
+      ******************************************************************
+      * SUBPPROGRAM TO HANDLE ALL CARDS IN THE SOLITAIRE GAME
        IDENTIFICATION DIVISION.
        PROGRAM-ID. CARDS.
 
        DATA DIVISION.
-
        WORKING-STORAGE SECTION. 
-
       ******************************************************************
       *   DEFINES ALL POSSIBLE RANKS FOR A CARD IN THE GAME
        01 RANKS.
@@ -37,67 +37,70 @@
        01 CARD.
       *      CARD RANK PART
           02 C-RANK.
-      *         RANK ALPHA/ASCII CODE
+      *         RANK ALPHA CODE
              03 RANK-A        PIC X.
       *         RANK NUMBER
              03 RANK-N        PIC 99.
       *      CARD SUIT PART
           02 C-SUIT.
+      *         THE ALPHA LETTER OF THE SUIT
              03 SUIT-A        PIC X.
-             03 SUIT-C        PIC X.
+      *         THE COLOR OF THE SUIT
+             03 SUIT-C        PIC X.                     
+      *         THE NUMBER OF THE SUIT
              03 SUIT-N        PIC 9.
 
       ******************************************************************
       *      DEFINES ALL POSSIBLE CARDS IN THE GAME
        01 CARDS.
-      *         TABLE  IN THE GAME
+      *      WE HAVE FOUR SUITS IN THE GAME
           03 CARDS-SUIT-T OCCURS 4 TIMES INDEXED BY CARDS-S-I.
+      *         WE HAVE 13 RANKS PER SUIT
              05 CARDS-RANK-T OCCURS 13 TIMES INDEXED BY CARDS-R-I.
                 06 CARD-RANK.
-      *                  ALPHA CODE OF RANK:
-      *                  A,2,3,4,5,6,7,8,9,T,J,Q,K             
+      *               ALPHA CODE OF RANK: A,2,3,4,5,6,7,8,9,T,J,Q,K             
                    07 RANK-A  PIC X.
-      *                  NUMBER CODE OF RANK:
-      *                  1 - 13
+      *               NUMBER CODE OF RANK: 1 - 13
                    07 RANK-N  PIC 99.
                 06 CARD-SUIT.
-      *                  ALPHA CODE OF SUIT:
-      *                  D(IAMONDS),C(LUB),H(EARTS),S(PADES)
+      *               ALPHA CODE OF SUIT:
+      *               D(IAMONDS),C(LUB),H(EARTS),S(PADES)
                    07 SUIT-A  PIC X.
-      *                  COLOR OF SUIT:
-      *                  R(ED), B(LACK)
+      *               COLOR OF SUIT:
+      *               R(ED), B(LACK)
                    07 SUIT-C  PIC X.
-      *                  NUMBER CODE OF SUIT:
-      *                  1 - 4
+      *               NUMBER CODE OF SUIT: 1 - 4
                    07 SUIT-N  PIC 9.
 
        LINKAGE SECTION. 
       ******************************************************************
-      *      THE REQUEST-RESPONSE-BLOCK
-       01 REQ-RSP-BLOCK.
-      *            THE OPERATION REQUESTED TO BE PERFORMED
-      *            1 = INITIALIZE CARDS
-          04 REQ-OP-CODE      PIC 9.
-      *            RANK NUMBER
-          04 REQ-RANK-N       PIC 99.
-      *            SUIT NUMBER
-          04 REQ-SUIT-N       PIC 9.
-      *            THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
-      *            1 = ILLEGAL OP
-      *            2 = ILLEGAL RANK: LOWER THAN MIN
-      *            3 = ILLEGAL RANK: HIGHER THAN MAX
-      *            4 = ILLEGAL SUIT: LOWER THAN MIN
-      *            5 = ILLEGAL SUIT: HIGHER THAN MAX
-          04 RSP-ERR-CODE     PIC 99.
-      *            RANK ALPHA CODE OF REQUESTED RANK NUMBER
-          04 RSP-RANK-A       PIC X.
-      *            SUIT ALPHA CODE OF REQUESTED SUIT NUMBER
-          04 RSP-SUIT-A       PIC X.
+      *   THE API
+       01 CARDS-API.
+      *      THE REQUES-RESPONSE-BLOCK
+          02 REQ-RSP-BLOCK.
+      *         THE OPERATION REQUESTED TO BE PERFORMED
+      *         1 = INITIALIZE CARDS
+      *         2 = RETURN THE RANK AND SUIT ALPHA
+             03 REQ-OP-CODE   PIC 9.
+      *         RANK NUMBER
+             03 REQ-RANK-N    PIC 99.
+      *         SUIT NUMBER
+             03 REQ-SUIT-N    PIC 9.
+      *         THE ERROR CODE, IF ANY, FOR THE REQUESTED OPERATION
+      *         1 = ILLEGAL OP
+      *         2 = ILLEGAL RANK: LOWER THAN MIN
+      *         3 = ILLEGAL RANK: HIGHER THAN MAX
+      *         4 = ILLEGAL SUIT: LOWER THAN MIN
+      *         5 = ILLEGAL SUIT: HIGHER THAN MAX
+             03 RSP-ERR-CODE  PIC 99.
+      *         RANK ALPHA CODE OF REQUESTED RANK NUMBER
+             03 RSP-RANK-A    PIC X.
+      *         SUIT ALPHA CODE OF REQUESTED SUIT NUMBER
+             03 RSP-SUIT-A    PIC X.
 
       ******************************************************************
-       PROCEDURE DIVISION USING REQ-RSP-BLOCK.
-
-      *    LEST THINK POSITIVE AND CLEAR ERROR CODE
+       PROCEDURE DIVISION USING CARDS-API.
+      *    CLEAR ERROR CODE
            MOVE 0 TO RSP-ERR-CODE 
 
            EVALUATE REQ-OP-CODE 

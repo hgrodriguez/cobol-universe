@@ -112,10 +112,10 @@
            PERFORM 23-PRINT-EMPTY-STOCK.
 
            PERFORM 01-STOCK-RESET.
-      *    PERFORM XX-REMOVE FROM- STOCK-7-NEXT
+           PERFORM 30-ILLEGAL-OP-CODE
 
            PERFORM 01-STOCK-RESET.
-      *    PERFORM EMPTY-STOCK-AND CHECK IT WAS 52 CARDS
+           PERFORM 31-ILLEGAL-CARD-INDEX
 
            DISPLAY "TESTS RUN: " TESTS-RUN
            DISPLAY "SUCCESSFUL / FAILED: " TESTS-OK " / " TESTS-NOK
@@ -566,6 +566,59 @@
               DISPLAY "22-PRINT-NO-PEEK:" WITH NO ADVANCING 
               DISPLAY "TOS-SUIT-A=" RSP-TOS-SUIT-A WITH NO ADVANCING 
               DISPLAY " <> X"
+           END-IF.
+
+      ******************************************************************
+       30-ILLEGAL-OP-CODE.
+           MOVE 0 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL
+           ADD 1 TO TESTS-RUN
+           IF RSP-ERR-CODE OF STOCK IS EQUAL TO 1
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "30-ILLEGAL-OP-CODE:" WITH NO ADVANCING 
+              DISPLAY "RSP-ERROR-CODE=" RSP-ERR-CODE OF STOCK
+                 WITH NO ADVANCING 
+              DISPLAY " <> 1"
+           END-IF.
+
+      ******************************************************************
+       31-ILLEGAL-CARD-INDEX.
+           MOVE 7 TO REQ-OP-CODE OF STOCK
+           MOVE 0 TO REQ-CARD-INDEX
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL
+           ADD 1 TO TESTS-RUN
+           IF RSP-ERR-CODE OF STOCK IS EQUAL TO 3
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "31-ILLEGAL-CARD-INDEX:" WITH NO ADVANCING 
+              DISPLAY "RSP-ERROR-CODE=" RSP-ERR-CODE OF STOCK
+                 WITH NO ADVANCING 
+              DISPLAY " <> 3"
+           END-IF.
+
+           MOVE 6 TO REQ-OP-CODE OF STOCK.
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL.           
+
+           MOVE 7 TO REQ-OP-CODE OF STOCK
+           ADD 1 TO RSP-NUM-OF-CARDS 
+           MOVE RSP-NUM-OF-CARDS TO REQ-CARD-INDEX
+           CALL 'STOCK' USING REQ-RSP-BLOCK OF STOCK
+           END-CALL
+           ADD 1 TO TESTS-RUN
+           IF RSP-ERR-CODE OF STOCK IS EQUAL TO 3
+              ADD 1 TO TESTS-OK
+           ELSE
+              ADD 1 TO TESTS-NOK
+              DISPLAY "31-ILLEGAL-CARD-INDEX:" WITH NO ADVANCING 
+              DISPLAY "RSP-ERROR-CODE=" RSP-ERR-CODE OF STOCK
+                 WITH NO ADVANCING 
+              DISPLAY " <> 3"
            END-IF.
 
       ******************************************************************
